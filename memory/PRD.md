@@ -57,6 +57,10 @@ See original problem statement; acceptance criteria listed there.
 - Scripture reference styling: Bible tab "Scripture reference" panel with color (accent_color) + size (reference_size 1-10); removed duplicate Reference row from Bible Colors panel
 - Testing: iteration_7 passed (non-destructive; user settings preserved)
 
+## Implemented (2026-10-09, iteration 9)
+- Verse text size slider (verse_size 1-10, scales FitText base size; long verses still shrink to fit) in Bible tab "Scripture text & reference" panel
+- Testing: iteration_8 passed (non-destructive; user settings preserved)
+
 ## Backlog
 - P1: Run install.sh on the real NUC and verify host networking, reboot persistence, offline use
 - P1: Final idle slide design asset
