@@ -1,0 +1,27 @@
+{
+  "summary": "Tested iteration-2 features: appearance customization (/api/appearance/{register|bible}), image upload/delete, settings area auth, PIN change flow with pin_version token invalidation, and SettingsAdmin UI (PIN gate, 3 tabs, AppearanceEditor save/reset/dirty-state, bg image upload+motion=parallax applied to /register display, PinChangeForm mismatch error, change-pin end-to-end including re-prompt and old-PIN rejection on /register-admin). Added 15 new backend tests in test_appearance_pin.py (all pass). Regression: all 39 previous tests still pass (test_sanctuary.py). PIN restored to 1234; appearances reset to defaults; images deleted; bible display cleared; pin_attempts cleared.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_appearance_pin.py",
+    "/app/backend/tests/test_sanctuary.py",
+    "/app/test_reports/pytest/appearance_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "appearance_routes.py update_appearance uses full-replace $set with model_dump() so PUT with partial body replaces entire doc with defaults for unspecified keys (Pydantic fills defaults). Documented behaviour (frontend sends full form), but a PATCH-style merge would be safer against future partial writes.",
+    "upload_image: deletes old image AFTER inserting new and updating pointer — correct order to avoid dangling references. Good.",
+    "change_pin: still subject to per-IP lockout via check_pin — good (brute-force protection). Consider separate counter for change-pin to avoid locking out legitimate admins who already proved possession via settings token; low priority.",
+    "Token pv claim invalidation works correctly — old register/bible tokens 401 after PIN change, verified via UI (register-admin re-asks PIN).",
+    "DisplayBackground parallax uses CSS animation; motion_speed slider wires to animation-duration (observed data-motion='parallax' applied). OK.",
+    "PinChangeForm clears register/bible tokens client-side after success but server-side invalidation via pv is the actual guarantee — belt-and-suspenders OK."
+  ],
+  "updated_files": ["/app/backend/tests/test_appearance_pin.py"],
+  "success_rate": {"backend": "100% (54/54 — 39 regression + 15 new)", "frontend": "100% of critical appearance+PIN flows"},
+  "test_credentials": "Admin PIN 1234 (shared register/bible/settings).",
+  "seed_data_creation": "Uploaded /tmp/test_bg.jpg during testing then deleted. Appearances reset to defaults. Bible display cleared to idle. pin_attempts cleared.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Settings area uses SETTINGS_AUTH (JWT area=settings). PIN change bumps admin_config.pin_version → any JWT with mismatching pv claim yields 401 via core._require_area. For UI OTP input, use page.keyboard.type('1234') after focusing (autoFocus already set). Preview iframe present but postMessage sync was not directly asserted — direct DOM check on /register showed CSS vars (--ss-accent etc.) and data-motion='parallax' applied correctly, so WS/public-display pipeline is confirmed working. If PIN lockout triggers during testing: db.pin_attempts.delete_many({}).",
+  "rca of the issue": "No bugs found."
+}

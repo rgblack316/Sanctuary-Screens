@@ -103,7 +103,7 @@ export const AppearanceEditor = ({ display }) => {
           </span>
         </div>
       </div>
-      <div className="lg:col-span-7">
+      <div className="lg:col-span-7 lg:sticky lg:top-20 lg:self-start">
         <Panel
           title="Preview"
           testid="preview-panel"

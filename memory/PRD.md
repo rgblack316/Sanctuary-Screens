@@ -24,6 +24,12 @@ See original problem statement; acceptance criteria listed there.
 - Docker/compose/nginx, install.sh, upgrade.sh (--reset-pin, --no-pull), README
 - Testing: iteration_1 – backend 39/39, frontend critical flows pass. Docker build/scripts only syntax-checked (no Docker in preview).
 
+## Implemented (2026-10-09, iteration 2)
+- User request: "We need to have the ability to customize the appearance on the /bible and /register screens. Being able to add in a background image and apply a parallax effect or blur to the images. We also need to be able to customize the colors used for the fonts on these displays. We need to have an admin panel to change the PIN as needed as well."
+- /settings-admin (PIN area "settings"): per-display colors (background, text, accent, secondary, panel + opacity), background image upload stored in MongoDB (display_images), blur, darken/tint, parallax drift motion + speed; live iframe preview with sample content + portrait/landscape; save broadcasts via WS
+- PIN change in UI (pin_version in JWT invalidates all other sessions); ADMIN_PIN env re-applies only when its value changes (fingerprint) or via upgrade.sh --reset-pin
+- Testing: iteration_2 – 54/54 backend tests, frontend flows pass
+
 ## Backlog
 - P1: Run install.sh on the real NUC and verify host networking, reboot persistence, offline use
 - P1: Final idle slide design asset
