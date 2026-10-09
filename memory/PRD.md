@@ -41,6 +41,10 @@ See original problem statement; acceptance criteria listed there.
 - Church logo: shared upload (site_settings.logo_image_id, stored in display_images), per-display show + size, rendered beside the name at the name position (logo alone if no name)
 - Testing: iteration_4 – 89/89 backend tests, frontend flows pass
 
+## Implemented (2026-10-09, iteration 5)
+- Bug fix: /bible idle slide overlapped church name with the accent bar. Idle now shows: logo (optional) → accent bar → "Welcome to" → church name (name color/caps settings) → today's date → optional subtitle. Falls back to "Welcome" + date when no name or name hidden.
+- Testing: iteration_5 – all idle scenarios pass
+
 ## Backlog
 - P1: Run install.sh on the real NUC and verify host networking, reboot persistence, offline use
 - P1: Final idle slide design asset
