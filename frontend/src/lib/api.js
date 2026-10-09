@@ -36,6 +36,7 @@ function adminClient(area) {
 
 export const registerApi = adminClient("register");
 export const bibleApi = adminClient("bible");
+export const settingsApi = adminClient("settings");
 
 export function errMsg(e, fallback = "Something went wrong.") {
   const d = e?.response?.data?.detail;

@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
-import { BookOpen, Users, MonitorPlay, SlidersHorizontal } from "lucide-react";
+import { BookOpen, Users, MonitorPlay, SlidersHorizontal, Palette } from "lucide-react";
 
 const LINKS = [
   { to: "/register", label: "Register Display", desc: "Attendance and offering screen", icon: MonitorPlay, id: "register" },
   { to: "/register-admin", label: "Register Admin", desc: "Enter service numbers (PIN)", icon: Users, id: "register-admin" },
   { to: "/bible", label: "Bible Display", desc: "Scripture screen for the sermon", icon: BookOpen, id: "bible" },
   { to: "/bible-admin", label: "Bible Admin", desc: "Prepare and present scripture (PIN)", icon: SlidersHorizontal, id: "bible-admin" },
+  { to: "/settings-admin", label: "Display Settings", desc: "Backgrounds, colors and admin PIN (PIN)", icon: Palette, id: "settings-admin" },
 ];
 
 export default function Home() {

@@ -69,9 +69,13 @@ def _require_area(area: str):
             raise HTTPException(401, "Session expired. Enter the PIN again.")
         if payload.get("area") != area:
             raise HTTPException(401, "PIN required for this admin area")
+        cfg = await db.admin_config.find_one({"_id": "admin"}, {"pin_version": 1}) or {}
+        if payload.get("pv") != cfg.get("pin_version", 1):
+            raise HTTPException(401, "The PIN was changed. Enter the new PIN.")
         return payload
     return dep
 
 
 REGISTER_AUTH = Depends(_require_area("register"))
 BIBLE_AUTH = Depends(_require_area("bible"))
+SETTINGS_AUTH = Depends(_require_area("settings"))

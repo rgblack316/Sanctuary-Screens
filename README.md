@@ -8,6 +8,7 @@ Local church display system for the Intel NUC. Two independent live displays on 
 | `/register-admin` | PIN-protected entry of service numbers |
 | `/bible` | Scripture display – one verse per slide, idle slide when nothing is live |
 | `/bible-admin` | PIN-protected scripture control, prepared list, translation import/delete |
+| `/settings-admin` | PIN-protected display appearance (background image, blur, parallax drift, colors) and admin PIN change |
 
 Everything runs locally in Docker (React + FastAPI + MongoDB). No internet is needed during a service; scripture is looked up from translations imported into the local database. KJV is bundled and imported automatically on first start.
 
@@ -50,6 +51,18 @@ cd /opt/sanctuary-screens && sudo ./upgrade.sh
 See `.env.example`. Key settings: `ADMIN_PIN` (4 digits, shared by both admin pages), `APP_PORT`, `BACKEND_PORT`, `CURRENCY_SYMBOL`, `IDLE_TITLE`, `IDLE_SUBTITLE`, `MONGO_IMAGE` (use `mongo:4.4` if the CPU lacks AVX). After editing run `docker compose up -d`.
 
 The PIN is stored in the database only as a bcrypt hash. Five wrong PIN attempts lock the device out for 5 minutes. Admin sessions last 12 hours per browser.
+
+`ADMIN_PIN` sets the PIN on first start. After that the PIN can be changed in `/settings-admin` → Admin PIN; that change survives restarts and upgrades (changing it signs out all other admin screens). `ADMIN_PIN` only takes effect again if you change its value in `.env` (or run `./upgrade.sh --reset-pin`) – use this to recover a forgotten PIN.
+
+## Display appearance
+
+`/settings-admin` has a tab per display (`/bible`, `/register`) with a live preview (landscape/portrait, optional sample content):
+
+- colors: background, main text, accent, secondary text, panel/tile color and opacity
+- background image upload (PNG/JPG/WEBP/GIF, max 12 MB, stored in MongoDB so it is kept through upgrades)
+- blur, darken/tint, and a slow "parallax drift" motion with adjustable speed
+
+Saving pushes the change to the open displays instantly.
 
 ## Idle slide
 

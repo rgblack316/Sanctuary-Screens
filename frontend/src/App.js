@@ -12,6 +12,7 @@ import RegisterDisplay from "@/pages/RegisterDisplay";
 import RegisterAdmin from "@/pages/RegisterAdmin";
 import BibleDisplay from "@/pages/BibleDisplay";
 import BibleAdmin from "@/pages/BibleAdmin";
+import SettingsAdmin from "@/pages/SettingsAdmin";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/register-admin" element={<RegisterAdmin />} />
         <Route path="/bible" element={<BibleDisplay />} />
         <Route path="/bible-admin" element={<BibleAdmin />} />
+        <Route path="/settings-admin" element={<SettingsAdmin />} />
         <Route path="*" element={<Home />} />
       </Routes>
       <Toaster theme="dark" position="bottom-right" richColors closeButton />

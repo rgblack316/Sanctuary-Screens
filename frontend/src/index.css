@@ -45,10 +45,29 @@
 .font-mono-ui { font-family: "JetBrains Mono", monospace; }
 .label-caps { @apply text-xs uppercase tracking-[0.18em] font-semibold text-slate-400; }
 
+/* ---------- customizable display theme (vars set from saved appearance) ---------- */
+.ss-accent { color: var(--ss-accent, #f59e0b); }
+.ss-muted { color: var(--ss-muted, #94a3b8); }
+.ss-text { color: var(--ss-text, #f8fafc); }
+.ss-text-soft { color: var(--ss-text, #f8fafc); opacity: 0.82; }
+.ss-bg-wrap { position: absolute; inset: 0; overflow: hidden; z-index: 0; pointer-events: none; }
+.ss-bg-image {
+    position: absolute; inset: -8%; background-size: cover; background-position: center;
+    will-change: transform;
+}
+.ss-parallax { animation-name: ssDrift; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-direction: alternate; }
+.ss-bg-dim { position: absolute; inset: 0; }
+@keyframes ssDrift {
+    0% { transform: translate3d(-3.5%, -2%, 0) scale(1.06); }
+    50% { transform: translate3d(1%, 2.5%, 0) scale(1.12); }
+    100% { transform: translate3d(3.5%, -1%, 0) scale(1.08); }
+}
+.reg-screen > :not(.ss-bg-wrap), .bible-screen > :not(.ss-bg-wrap) { position: relative; z-index: 1; }
+
 /* ---------- live register display ---------- */
 .reg-screen {
-    height: 100vh; width: 100vw; overflow: hidden;
-    background: #090b10; color: #f8fafc;
+    height: 100vh; width: 100vw; overflow: hidden; position: relative;
+    background: var(--ss-bg, #090b10); color: var(--ss-text, #f8fafc);
     display: flex; flex-direction: column;
     padding: 3.5vmin; gap: 2.5vmin;
 }
@@ -57,11 +76,11 @@
     grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
 }
 .reg-tile {
-    background: #121620; border: 1px solid #222b3e; border-radius: 1.2vmin;
+    background: var(--ss-panel, #121620); border: 1px solid var(--ss-border, #222b3e); border-radius: 1.2vmin;
     display: flex; flex-direction: column; justify-content: center;
     padding: 3vmin 4vmin; min-height: 0; min-width: 0;
 }
-.reg-tile.current { border-color: #f59e0b55; }
+.reg-tile.current { border-color: var(--ss-accent-border, #f59e0b55); }
 .reg-label { font-size: clamp(0.9rem, min(3.2vh, 2.2vw), 3rem); }
 .reg-sub { font-size: clamp(0.75rem, min(2.2vh, 1.5vw), 2rem); }
 .reg-value {
@@ -70,7 +89,7 @@
     font-size: clamp(2.5rem, min(16vh, 8.5vw), 18rem);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.reg-value.na { color: #64748b; }
+.reg-value.na { color: var(--ss-muted, #64748b); }
 @media (orientation: portrait) {
     .reg-grid { grid-template-columns: 1fr; grid-template-rows: repeat(4, 1fr); }
     .reg-value { font-size: clamp(2.5rem, min(9vh, 15vw), 14rem); }
@@ -81,7 +100,7 @@
 /* ---------- live bible display ---------- */
 .bible-screen {
     height: 100vh; width: 100vw; overflow: hidden; position: relative;
-    background: #090b10; color: #f8fafc;
+    background: var(--ss-bg, #090b10); color: var(--ss-text, #f8fafc);
     display: flex; flex-direction: column;
     padding: 5vmin 6vmin 4vmin;
 }
@@ -89,13 +108,15 @@
 .bible-text {
     font-family: "Manrope", system-ui, sans-serif; font-weight: 600; line-height: 1.32;
     text-align: center; max-width: 92vw; text-wrap: balance;
+    background: var(--ss-panel, transparent); padding: 2.5vmin 4vmin; border-radius: 1.5vmin;
 }
 .bible-ref {
-    font-family: "Outfit", system-ui, sans-serif; font-weight: 700; color: #f59e0b;
+    font-family: "Outfit", system-ui, sans-serif; font-weight: 700; color: var(--ss-accent, #f59e0b);
     letter-spacing: 0.12em; text-transform: uppercase;
     font-size: clamp(1rem, 4vmin, 4rem);
 }
-.bible-meta { font-size: clamp(0.75rem, 2.2vmin, 2rem); color: #94a3b8; }
+.bible-meta { font-size: clamp(0.75rem, 2.2vmin, 2rem); color: var(--ss-muted, #94a3b8); }
+.bible-footer { border-top: 1px solid var(--ss-line, #222b3e); }
 .fade-in { animation: fadeIn 280ms ease-out both; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(0.6vmin); } to { opacity: 1; transform: none; } }
 .rise-in { animation: fadeIn 420ms ease-out both; }

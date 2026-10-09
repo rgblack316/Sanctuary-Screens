@@ -4,7 +4,7 @@ import { Lock, Loader2 } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { API, clearToken, errMsg, getToken, setToken } from "@/lib/api";
 
-const TITLES = { register: "Register Admin", bible: "Bible Admin" };
+const TITLES = { register: "Register Admin", bible: "Bible Admin", settings: "Display Settings" };
 
 function PinForm({ area, onUnlocked }) {
   const [pin, setPin] = useState("");

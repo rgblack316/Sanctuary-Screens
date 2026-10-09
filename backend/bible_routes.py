@@ -7,6 +7,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
+from appearance import get_appearance
 from books import display_name, resolve_query_book
 from core import (BIBLE_AUTH, IDLE_DIR, IDLE_SUBTITLE, IDLE_TITLE, MAX_SLIDES, db, hub, now_iso)
 from importer import validate_csv
@@ -100,7 +101,8 @@ async def active_passage() -> Optional[Passage]:
 
 async def bible_state() -> dict:
     st = await display_doc()
-    base = {"mode": "idle", "idle": idle_config(), "updated_at": st.get("updated_at")}
+    base = {"mode": "idle", "idle": idle_config(), "updated_at": st.get("updated_at"),
+            "appearance": await get_appearance("bible")}
     p = await active_passage()
     if not p or not p.verses:
         return base

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ExternalLink, Lock } from "lucide-react";
+import { ExternalLink, Lock, Settings } from "lucide-react";
 import { WsStatus } from "@/components/live/WsStatus";
 import { lockArea } from "@/components/live/PinGate";
 
@@ -11,7 +11,18 @@ export const AdminShell = ({ area, title, status, displayPath, children }) => (
         <span className="text-slate-600">/</span>
         <h1 className="font-display text-xl font-bold tracking-tight" data-testid="admin-title">{title}</h1>
         <div className="ml-auto flex items-center gap-3">
-          <WsStatus status={status} />
+          {status && <WsStatus status={status} />}
+          {area !== "settings" && (
+            <Link
+              to="/settings-admin"
+              data-testid="settings-link"
+              title="Display settings"
+              className="inline-flex items-center gap-1.5 rounded-md border border-[#222B3E] px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-amber-500/60 hover:text-amber-300 transition-colors"
+            >
+              <Settings size={12} /> <span className="hidden md:inline">Settings</span>
+            </Link>
+          )}
+          {displayPath && (
           <a
             href={displayPath}
             target="_blank"
@@ -21,6 +32,7 @@ export const AdminShell = ({ area, title, status, displayPath, children }) => (
           >
             Open {displayPath} <ExternalLink size={12} />
           </a>
+          )}
           <button
             onClick={() => lockArea(area)}
             data-testid="lock-admin-btn"
