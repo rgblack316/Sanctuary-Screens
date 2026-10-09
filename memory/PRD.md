@@ -61,6 +61,10 @@ See original problem statement; acceptance criteria listed there.
 - Verse text size slider (verse_size 1-10, scales FitText base size; long verses still shrink to fit) in Bible tab "Scripture text & reference" panel
 - Testing: iteration_8 passed (non-destructive; user settings preserved)
 
+## Implemented (2026-10-09, iteration 10)
+- Saved Looks per display (display_looks): save current tab settings + background under a name, apply (live WS push, "On screen" badge), update, delete; images referenced by looks are never deleted (release_image ref-check)
+- Testing: iteration_9 passed. Incident: the test run removed the user's Bible background image (must be re-uploaded).
+
 ## Backlog
 - P1: Run install.sh on the real NUC and verify host networking, reboot persistence, offline use
 - P1: Final idle slide design asset
