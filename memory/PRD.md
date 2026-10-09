@@ -71,6 +71,11 @@ See original problem statement; acceptance criteria listed there.
 - Calendars mark recorded dates (green dot): GET /api/register/dates, GET /api/bible/prepared-dates; legend in popover
 - Testing: iteration_10 passed (read-only)
 
+## Implemented (2026-10-09, iteration 12)
+- Backups (Settings > Backups): Back up now, weekly schedule (day/time/keep, NUC local time), gzip JSON of all app data incl. images (not PIN) in backups/ (compose mount), download/delete/restore (local or uploaded file, confirm), optional email via user's SMTP (test email button; password never returned)
+- Register: delete a service date (history Delete + confirm); clears active if needed, reverts comparisons that pointed at it
+- Testing: iteration_11 passed (21/21 backend, frontend 100%); no real SMTP tested
+
 ## Backlog
 - P1: Run install.sh on the real NUC and verify host networking, reboot persistence, offline use
 - P1: Final idle slide design asset

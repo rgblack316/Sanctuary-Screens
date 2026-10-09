@@ -1,0 +1,27 @@
+{
+  "summary": "Iteration 11: Backup mechanism (Settings > Backups) + Register service delete. Backend pytest (21/21 passed) covers auth 401, backup settings GET/PUT (password never returned, has_password flag flips, leave-blank preserves password), test-email 422 (no host) and 502 (bogus host 'smtp.invalid-sanctuary.test'), /backup/list, /backup/run?email=false (creates valid gzip containing 'sanctuary-screens'), /backup/download/{name} 200 + 404 for bad names and non-matching pattern, /backup/{name} DELETE + 404 for missing, restore endpoints: 400 without confirm, 422 for invalid gzip. Register DELETE /api/register/services/{date}: 404 missing, 422 invalid date, overridden comparison reverts to 7-days-earlier (deleted 2030-01-06 -> 2030-01-20 reverted from override to 2030-01-13 auto), deleting the active service falls back to latest remaining and clears active_service_date. Frontend: /settings-admin > settings-tab-backup shows backup-list-panel + backup-settings-panel; backup-now-btn created new backup row, backup-last-run text updated, backup-restore-{name} opens restore-dialog (only pressed restore-cancel), backup-delete-{name} removed only the backup we created (protected sanctuary-backup-20261009-170018.json.gz left intact), backup-test-email-btn with no host surfaced the correct 422 toast 'Enter the SMTP server and recipient email first, then save.', backup-settings-save-btn persists (keep=9 survived reload, then restored to 8). /register-admin history-delete-{date} opens delete-service-dialog showing record details ('TEST_del · attendance 42 · offering $100.00'); delete-service-confirm removed the row (TEST_ 2030-02-03) and the mirror reflects latest remaining (2026-10-04). User's existing register records for 2026-09-27 and 2026-10-04 preserved. User's protected backup file preserved. Backup settings restored to original values; has_password restored to false; active service restored to 2026-10-04.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter11_backup_delete.py",
+    "/app/test_reports/pytest/iter11.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "backup.py put_settings uses `if not data['smtp_password']: data.pop('smtp_password')` so once a password is set via API, there is NO way to clear it except directly editing Mongo. Consider adding an explicit 'clear password' affordance (e.g. sentinel value or a DELETE route) to prevent the UI/backend from being out of sync when a user wants to remove the saved SMTP password. During testing I had to $unset db.backup_settings.smtp_password directly to restore the user's original has_password=false state.",
+    "backup.py scheduler_loop and create_backup prune via `_files()[s['keep']:]`. If the user ever lowers 'keep' below the number of existing backups, the next scheduled OR manual run will immediately delete older backups including backups from previous installs. That is the intent per the spec but worth surfacing a confirmation when `keep` is reduced.",
+    "backup.py _send_email: when `email_from` is empty it falls back to `smtp_user`; if both are empty the EmailMessage will set From=''. Not a bug for the current flow but will cause SMTP servers to reject.",
+    "register_routes.delete_service clears active_service_date with a filtered update_one keyed by current active_service_date. Good. It also reverts comparison overrides to d-7 WITHOUT checking that d-7 service actually exists (upsert_service enforces this for new records but revert doesn't). Likely acceptable because `previous` lookup is None-tolerant.",
+    "settings tab Backups renders Panel titles OK, but on the delete icon (red Trash2) there is NO confirmation dialog - a single click permanently deletes a backup file. The spec permits this but a lightweight AlertDialog mirror of the restore flow would be safer against misclicks."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter11_backup_delete.py"
+  ],
+  "success_rate": {"backend": "100% (21/21)", "frontend": "100%"},
+  "test_credentials": "Admin PIN 1234",
+  "seed_data_creation": "Transient TEST_ register records at 2030-01-06, 2030-01-13, 2030-01-20 (pytest) and 2030-02-03 (playwright). All removed in teardown. Transient backup file created and deleted during tests. Protected backup sanctuary-backup-20261009-170018.json.gz and user's register records 2026-09-27/2026-10-04 untouched. Note: 2026-10-09 register record was already absent at test time (the user had deleted it themselves between iter10 and iter11, as anticipated by the agent note).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backups + register delete fully working. Current register has services on 2026-09-27 and 2026-10-04 (2026-10-09 deleted by user). Active date is 2026-10-04. Backup folder contains only sanctuary-backup-20261009-170018.json.gz - do NOT delete it. backup_settings has schedule_enabled=true, weekday=6 (Sunday), time=23:00, keep=8, email_enabled=false, all SMTP fields empty, has_password=false. Bible display still LIVE on Genesis 1-ish from previous iteration (not touched here).",
+  "rca of the issue": "N/A - all features behave per spec."
+}
