@@ -18,6 +18,7 @@ export const appearanceVars = (a) => {
     "--ss-border": hexToRgba(a.muted_color, 0.25 * op),
     "--ss-accent-border": hexToRgba(a.accent_color, 0.4 * op),
     "--ss-line": hexToRgba(a.muted_color, 0.3),
+    "--ss-ref-size": `${1.5 + (a.reference_size ?? 5) * 0.5}vmin`,
   };
 };
 

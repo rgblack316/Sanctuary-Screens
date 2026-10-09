@@ -10,15 +10,16 @@ import { ImageField } from "@/components/settings/ImageField";
 import { DisplayPreview } from "@/components/settings/DisplayPreview";
 import { ChurchNamePanel } from "@/components/settings/ChurchNamePanel";
 import { TranslationLabelPanel } from "@/components/settings/TranslationLabelPanel";
+import { ReferencePanel } from "@/components/settings/ReferencePanel";
 
 const COLOR_LABELS = {
-  bible: { text_color: "Verse text", accent_color: "Reference", muted_color: "Secondary text", panel_color: "Text panel" },
+  bible: { text_color: "Verse text", muted_color: "Secondary text", panel_color: "Text panel" },
   register: { text_color: "Numbers", accent_color: "This-week labels", muted_color: "Secondary text", panel_color: "Tiles" },
 };
 const KEYS = ["background_color", "text_color", "accent_color", "muted_color", "panel_color", "panel_opacity",
   "image_blur", "image_dim", "image_motion", "motion_speed", "church_name_show", "church_name_position",
   "church_name_size", "church_name_color", "church_name_uppercase", "church_logo_show", "church_logo_size",
-  "translation_show", "translation_position"];
+  "translation_show", "translation_position", "reference_size"];
 const same = (a, b) => a && b && KEYS.every((k) => a[k] === b[k]);
 
 const Toggle = ({ active, onClick, children, testid }) => (
@@ -80,6 +81,7 @@ export const AppearanceEditor = ({ display }) => {
     <div className="grid gap-8 lg:grid-cols-12" data-testid={`appearance-editor-${display}`}>
       <div className="space-y-6 lg:col-span-5">
         <ChurchNamePanel name={name} setName={setName} logoUrl={logoUrl} setLogoUrl={setLogoUrl} form={form} set={set} />
+        {display === "bible" && <ReferencePanel form={form} set={set} />}
         {display === "bible" && <TranslationLabelPanel form={form} set={set} />}
         <Panel title="Colors" testid="colors-panel">
           <div className="space-y-3">

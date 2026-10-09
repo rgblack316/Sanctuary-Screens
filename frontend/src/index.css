@@ -113,7 +113,7 @@
 .bible-ref {
     font-family: "Outfit", system-ui, sans-serif; font-weight: 700; color: var(--ss-accent, #f59e0b);
     letter-spacing: 0.12em; text-transform: uppercase;
-    font-size: clamp(1rem, 4vmin, 4rem);
+    font-size: max(0.9rem, var(--ss-ref-size, 4vmin));
 }
 .bible-meta { font-size: clamp(0.75rem, 2.2vmin, 2rem); color: var(--ss-muted, #94a3b8); }
 .bible-footer { border-top: 1px solid var(--ss-line, #222b3e); }
