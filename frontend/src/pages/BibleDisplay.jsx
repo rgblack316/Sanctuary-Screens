@@ -5,6 +5,7 @@ import { WsStatus } from "@/components/live/WsStatus";
 import { DisplayBackground, ChurchName, appearanceVars } from "@/components/live/DisplayBackground";
 import { assetUrl } from "@/lib/api";
 import { IdleWelcome } from "@/components/live/IdleWelcome";
+import { SlideMeta } from "@/components/live/SlideMeta";
 
 const SAMPLE = {
   mode: "passage", translation_code: "KJV", slide_index: 0, total: 3,
@@ -16,9 +17,10 @@ const SAMPLE = {
 
 const baseSize = (n) => (n < 80 ? 8 : n < 160 ? 6.6 : n < 280 ? 5.4 : n < 420 ? 4.6 : n < 600 ? 3.9 : 3.3);
 
-// Shrinks the verse until it fits the box (handles very long verses on small screens).
-function FitText({ text }) {
+// Shrinks the reference + verse group until it fits the box (handles very long verses on small screens).
+function FitText({ text, reference }) {
   const boxRef = useRef(null);
+  const groupRef = useRef(null);
   const textRef = useRef(null);
   const [size, setSize] = useState(baseSize(text.length));
   const [tick, setTick] = useState(0);
@@ -31,11 +33,12 @@ function FitText({ text }) {
 
   useLayoutEffect(() => {
     const box = boxRef.current;
+    const group = groupRef.current;
     const el = textRef.current;
-    if (!box || !el) return;
+    if (!box || !el || !group) return;
     let s = baseSize(text.length);
     el.style.fontSize = `${s}vmin`;
-    while (s > 1.6 && (el.scrollHeight > box.clientHeight || el.scrollWidth > box.clientWidth)) {
+    while (s > 1.6 && (group.scrollHeight > box.clientHeight || el.scrollWidth > box.clientWidth)) {
       s *= 0.93;
       el.style.fontSize = `${s}vmin`;
     }
@@ -44,9 +47,12 @@ function FitText({ text }) {
 
   return (
     <div ref={boxRef} className="bible-text-box">
-      <p ref={textRef} data-testid="bible-verse-text" className="bible-text fade-in" key={text} style={{ fontSize: `${size}vmin` }}>
-        {text}
-      </p>
+      <div ref={groupRef} className="flex max-h-full flex-col items-center fade-in" key={`${reference}-${text}`}>
+        <span className="bible-ref mb-[3vmin] text-center" data-testid="bible-reference">{reference}</span>
+        <p ref={textRef} data-testid="bible-verse-text" className="bible-text" style={{ fontSize: `${size}vmin` }}>
+          {text}
+        </p>
+      </div>
     </div>
   );
 }
@@ -76,14 +82,10 @@ export default function BibleDisplay() {
         <div className="bible-screen">
           <DisplayBackground appearance={appearance} />
           <ChurchName name={churchName} logoUrl={logoUrl} appearance={appearance} place="top" />
-          <FitText text={data.slide.verse_text} />
-          <footer className="bible-footer mt-[3vmin] flex items-end justify-between gap-6 pt-[2.5vmin]">
-            <span className="bible-ref" data-testid="bible-reference">{data.slide.reference_label}</span>
-            <span className="bible-meta flex items-center gap-[2vmin] font-semibold">
-              {data.translation_code && <span data-testid="bible-translation-badge" className="font-display tracking-widest">{data.translation_code}</span>}
-              {data.total > 1 && <span data-testid="bible-slide-counter" className="font-mono-ui">{data.slide_index + 1} / {data.total}</span>}
-            </span>
-          </footer>
+          <SlideMeta place="top" appearance={appearance} translationCode={data.translation_code} />
+          <FitText text={data.slide.verse_text} reference={data.slide.reference_label} />
+          <SlideMeta place="bottom" appearance={appearance} translationCode={data.translation_code}
+            counter={data.total > 1 ? `${data.slide_index + 1} / ${data.total}` : null} />
           <div className="mt-[2vmin]"><ChurchName name={churchName} logoUrl={logoUrl} appearance={appearance} place="bottom" /></div>
         </div>
       ) : (

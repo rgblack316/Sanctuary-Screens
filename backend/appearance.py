@@ -26,6 +26,8 @@ class AppearanceIn(BaseModel):
     church_name_uppercase: bool = True
     church_logo_show: bool = True
     church_logo_size: int = Field(5, ge=1, le=10)
+    translation_show: bool = True
+    translation_position: Position = "bottom-right"
 
 
 DEFAULTS = {
