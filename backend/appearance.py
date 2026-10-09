@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from core import db
 
 HEX = r"^#[0-9a-fA-F]{6}$"
+Position = Literal["top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right"]
 
 
 class AppearanceIn(BaseModel):
@@ -18,6 +19,11 @@ class AppearanceIn(BaseModel):
     image_dim: int = Field(40, ge=0, le=95)
     image_motion: Literal["none", "parallax"] = "none"
     motion_speed: int = Field(4, ge=1, le=10)
+    church_name_show: bool = True
+    church_name_position: Position = "top-center"
+    church_name_size: int = Field(4, ge=1, le=10)
+    church_name_color: str = Field("#F8FAFC", pattern=HEX)
+    church_name_uppercase: bool = True
 
 
 DEFAULTS = {
@@ -32,3 +38,7 @@ async def get_appearance(display: str) -> dict:
     a = AppearanceIn(**{**DEFAULTS[display], **values})
     image_id = doc.get("image_id")
     return {**a.model_dump(), "image_url": f"/api/appearance/image/{image_id}" if image_id else None}
+
+
+async def get_church_name() -> str:
+    return (await db.site_settings.find_one({"_id": "site"}) or {}).get("church_name", "")

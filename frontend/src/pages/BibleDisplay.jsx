@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { useLiveChannel } from "@/hooks/useLiveChannel";
 import { usePreview } from "@/hooks/usePreview";
 import { WsStatus } from "@/components/live/WsStatus";
-import { DisplayBackground, appearanceVars } from "@/components/live/DisplayBackground";
+import { DisplayBackground, ChurchName, appearanceVars } from "@/components/live/DisplayBackground";
 import { assetUrl } from "@/lib/api";
 
 const SAMPLE = {
@@ -50,12 +50,14 @@ function FitText({ text }) {
   );
 }
 
-const IdleSlide = ({ idle, appearance }) => (
+const IdleSlide = ({ idle, appearance, churchName }) => (
   <div className="bible-screen items-center justify-center text-center" data-testid="bible-idle-slide">
     <DisplayBackground appearance={appearance} />
     {idle?.image_url && (
       <img src={assetUrl(idle.image_url)} alt="" data-testid="bible-idle-image" className="absolute inset-0 h-full w-full object-cover" />
     )}
+    <ChurchName name={churchName} appearance={appearance} place="top" floating />
+    <ChurchName name={churchName} appearance={appearance} place="bottom" floating />
     {!idle?.image_url && (
       <div className="fade-in relative">
         <div className="mx-auto mb-[4vmin] h-[0.5vmin] w-[10vmin]" style={{ background: "var(--ss-accent, #f59e0b)" }} />
@@ -75,6 +77,7 @@ export default function BibleDisplay() {
   const preview = usePreview();
   const data = preview?.sample ? { ...live, ...SAMPLE } : live;
   const appearance = preview?.appearance || live?.appearance;
+  const churchName = preview ? preview.church_name : live?.church_name;
   const active = data?.mode === "passage" && data.slide;
 
   return (
@@ -82,6 +85,7 @@ export default function BibleDisplay() {
       {active ? (
         <div className="bible-screen">
           <DisplayBackground appearance={appearance} />
+          <ChurchName name={churchName} appearance={appearance} place="top" />
           <FitText text={data.slide.verse_text} />
           <footer className="bible-footer mt-[3vmin] flex items-end justify-between gap-6 pt-[2.5vmin]">
             <span className="bible-ref" data-testid="bible-reference">{data.slide.reference_label}</span>
@@ -90,9 +94,10 @@ export default function BibleDisplay() {
               {data.total > 1 && <span data-testid="bible-slide-counter" className="font-mono-ui">{data.slide_index + 1} / {data.total}</span>}
             </span>
           </footer>
+          <div className="mt-[2vmin]"><ChurchName name={churchName} appearance={appearance} place="bottom" /></div>
         </div>
       ) : (
-        <IdleSlide idle={data?.idle} appearance={appearance} />
+        <IdleSlide idle={data?.idle} appearance={appearance} churchName={churchName} />
       )}
       <WsStatus status={status} subtle className="absolute left-3 bottom-3 z-10" />
     </div>

@@ -4,8 +4,9 @@ from bson import Binary, ObjectId
 from bson.errors import InvalidId
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import Response
+from pydantic import BaseModel, Field
 
-from appearance import DEFAULTS, AppearanceIn, get_appearance
+from appearance import DEFAULTS, AppearanceIn, get_appearance, get_church_name
 from bible_routes import bible_state
 from core import SETTINGS_AUTH, db, hub, now_iso
 from register_routes import register_state
@@ -21,7 +22,22 @@ async def _broadcast(display: str):
 
 
 async def _result(display: str) -> dict:
-    return {"appearance": await get_appearance(display), "defaults": DEFAULTS[display]}
+    return {"appearance": await get_appearance(display), "defaults": DEFAULTS[display],
+            "church_name": await get_church_name()}
+
+
+class ChurchNameIn(BaseModel):
+    church_name: str = Field("", max_length=120)
+
+
+@router.put("/church-name", dependencies=[SETTINGS_AUTH])
+async def update_church_name(body: ChurchNameIn):
+    name = body.church_name.strip()
+    await db.site_settings.update_one({"_id": "site"}, {"$set": {"church_name": name, "updated_at": now_iso()}},
+                                      upsert=True)
+    await _broadcast("register")
+    await _broadcast("bible")
+    return {"church_name": name}
 
 
 @router.get("/image/{image_id}")

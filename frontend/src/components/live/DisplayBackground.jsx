@@ -39,3 +39,29 @@ export const DisplayBackground = ({ appearance: a }) => {
     </div>
   );
 };
+
+const ALIGN = { left: "left", center: "center", right: "right" };
+
+// Church name row; `place` is "top" or "bottom". `floating` pins it over centered layouts (idle slide).
+export const ChurchName = ({ name, appearance: a, place, floating = false }) => {
+  if (!a?.church_name_show || !name?.trim()) return null;
+  const [vert, horiz] = a.church_name_position.split("-");
+  if (vert !== place) return null;
+  return (
+    <div
+      data-testid={`church-name-${place}`}
+      data-position={a.church_name_position}
+      className={`font-display font-bold leading-tight ${floating ? "absolute left-[6vmin] right-[6vmin]" : ""}`}
+      style={{
+        textAlign: ALIGN[horiz],
+        color: a.church_name_color,
+        fontSize: `${1.6 + a.church_name_size * 0.55}vmin`,
+        textTransform: a.church_name_uppercase ? "uppercase" : "none",
+        letterSpacing: a.church_name_uppercase ? "0.14em" : "0.01em",
+        ...(floating ? { [place]: "4vmin", zIndex: 2 } : {}),
+      }}
+    >
+      {name}
+    </div>
+  );
+};

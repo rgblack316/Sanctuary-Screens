@@ -8,13 +8,15 @@ import { errMsg, settingsApi } from "@/lib/api";
 import { ColorField, RangeField } from "@/components/settings/Fields";
 import { ImageField } from "@/components/settings/ImageField";
 import { DisplayPreview } from "@/components/settings/DisplayPreview";
+import { ChurchNamePanel } from "@/components/settings/ChurchNamePanel";
 
 const COLOR_LABELS = {
   bible: { text_color: "Verse text", accent_color: "Reference", muted_color: "Secondary text", panel_color: "Text panel" },
   register: { text_color: "Numbers", accent_color: "This-week labels", muted_color: "Secondary text", panel_color: "Tiles" },
 };
 const KEYS = ["background_color", "text_color", "accent_color", "muted_color", "panel_color", "panel_opacity",
-  "image_blur", "image_dim", "image_motion", "motion_speed"];
+  "image_blur", "image_dim", "image_motion", "motion_speed", "church_name_show", "church_name_position",
+  "church_name_size", "church_name_color", "church_name_uppercase"];
 const same = (a, b) => a && b && KEYS.every((k) => a[k] === b[k]);
 
 const Toggle = ({ active, onClick, children, testid }) => (
@@ -31,6 +33,8 @@ export const AppearanceEditor = ({ display }) => {
   const [busy, setBusy] = useState(false);
   const [sample, setSample] = useState(true);
   const [orientation, setOrientation] = useState("landscape");
+  const [name, setName] = useState("");
+  const [savedName, setSavedName] = useState("");
   const labels = COLOR_LABELS[display];
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -38,6 +42,7 @@ export const AppearanceEditor = ({ display }) => {
     try {
       const { data } = await settingsApi.get(`/appearance/${display}`);
       setSaved(data.appearance); setForm(data.appearance); setDefaults(data.defaults);
+      setName(data.church_name); setSavedName(data.church_name);
     } catch (e) {
       if (e.response?.status !== 401) toast.error(errMsg(e));
     }
@@ -45,12 +50,16 @@ export const AppearanceEditor = ({ display }) => {
   useEffect(() => { load(); }, [load]);
 
   if (!form) return <p className="text-sm text-slate-500">Loading…</p>;
-  const dirty = !same(form, saved);
+  const dirty = !same(form, saved) || name.trim() !== savedName;
   const hasImage = !!form.image_url;
 
   const save = async () => {
     setBusy(true);
     try {
+      if (name.trim() !== savedName) {
+        const { data: cn } = await settingsApi.put("/appearance/church-name", { church_name: name });
+        setName(cn.church_name); setSavedName(cn.church_name);
+      }
       const body = Object.fromEntries(KEYS.map((k) => [k, form[k]]));
       const { data } = await settingsApi.put(`/appearance/${display}`, body);
       setSaved(data.appearance); setForm(data.appearance);
@@ -67,6 +76,7 @@ export const AppearanceEditor = ({ display }) => {
   return (
     <div className="grid gap-8 lg:grid-cols-12" data-testid={`appearance-editor-${display}`}>
       <div className="space-y-6 lg:col-span-5">
+        <ChurchNamePanel name={name} setName={setName} form={form} set={set} />
         <Panel title="Colors" testid="colors-panel">
           <div className="space-y-3">
             <ColorField label="Background" value={form.background_color} onChange={set("background_color")} testid="color-background" />
@@ -117,7 +127,7 @@ export const AppearanceEditor = ({ display }) => {
             </>
           }
         >
-          <DisplayPreview path={`/${display}`} appearance={form} sample={sample} orientation={orientation} />
+          <DisplayPreview path={`/${display}`} appearance={form} churchName={name} sample={sample} orientation={orientation} />
         </Panel>
       </div>
     </div>

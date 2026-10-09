@@ -1,7 +1,7 @@
 import { useLiveChannel } from "@/hooks/useLiveChannel";
 import { usePreview } from "@/hooks/usePreview";
 import { WsStatus } from "@/components/live/WsStatus";
-import { DisplayBackground, appearanceVars } from "@/components/live/DisplayBackground";
+import { DisplayBackground, ChurchName, appearanceVars } from "@/components/live/DisplayBackground";
 import { formatCount, formatDate, formatMoney } from "@/lib/api";
 
 const SAMPLE = {
@@ -28,6 +28,7 @@ export default function RegisterDisplay() {
   const preview = usePreview();
   const data = preview?.sample ? { ...SAMPLE, currency: live?.currency ?? "$" } : live;
   const appearance = preview?.appearance || live?.appearance;
+  const churchName = preview ? preview.church_name : live?.church_name;
   const cur = data?.current;
   const prev = data?.previous;
   const currency = data?.currency ?? "$";
@@ -36,6 +37,7 @@ export default function RegisterDisplay() {
   return (
     <div className="reg-screen" data-testid="register-display" style={appearanceVars(appearance)}>
       <DisplayBackground appearance={appearance} />
+      <ChurchName name={churchName} appearance={appearance} place="top" />
       <header className="flex items-center gap-4">
         <div className="min-w-0">
           <p className="reg-label font-display font-bold ss-text truncate" data-testid="register-service-label">
@@ -57,6 +59,7 @@ export default function RegisterDisplay() {
           <Metric testid="offering-previous-week" label="Offering" sub={prevSub} value={formatMoney(prev?.offering, currency)} />
         </div>
       )}
+      <ChurchName name={churchName} appearance={appearance} place="bottom" />
     </div>
   );
 }

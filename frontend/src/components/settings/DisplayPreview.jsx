@@ -3,14 +3,14 @@ import { useEffect, useRef, useState } from "react";
 const SIZES = { landscape: [1920, 1080], portrait: [1080, 1920] };
 
 // Renders the real display page in an iframe and pushes unsaved appearance into it.
-export const DisplayPreview = ({ path, appearance, sample, orientation }) => {
+export const DisplayPreview = ({ path, appearance, churchName, sample, orientation }) => {
   const frameRef = useRef(null);
   const boxRef = useRef(null);
   const [scale, setScale] = useState(0.3);
   const [w, h] = SIZES[orientation];
 
   const push = () => frameRef.current?.contentWindow?.postMessage(
-    { type: "ss-preview", appearance, sample }, window.location.origin);
+    { type: "ss-preview", appearance, sample, church_name: churchName }, window.location.origin);
 
   useEffect(push); // eslint-disable-line react-hooks/exhaustive-deps
 

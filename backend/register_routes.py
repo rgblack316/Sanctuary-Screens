@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from appearance import get_appearance
+from appearance import get_appearance, get_church_name
 from core import CURRENCY, REGISTER_AUTH, db, hub, now_iso
 from models import Service
 
@@ -37,15 +37,16 @@ async def register_state() -> dict:
     if not cur:
         cur = await db.register_services.find_one(sort=[("service_date", -1)])
     appearance = await get_appearance("register")
+    church_name = await get_church_name()
     if not cur:
         return {"currency": CURRENCY, "current": None, "previous": None, "comparison_service_date": None,
-                "appearance": appearance}
+                "appearance": appearance, "church_name": church_name}
     current = Service.from_mongo(cur)
     comp = (date.fromisoformat(current.service_date) - timedelta(days=7)).isoformat()
     prev = Service.from_mongo(await db.register_services.find_one({"service_date": comp}))
     return {"currency": CURRENCY, "current": current.model_dump(),
             "previous": prev.model_dump() if prev else None, "comparison_service_date": comp,
-            "appearance": appearance}
+            "appearance": appearance, "church_name": church_name}
 
 
 @router.get("/display")
