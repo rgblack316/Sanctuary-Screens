@@ -32,7 +32,7 @@ sudo bash install.sh            # installs to /opt/sanctuary-screens
 # or: git clone https://github.com/rgblack316/Sanctuary-Screens.git && cd Sanctuary-Screens && ./install.sh
 ```
 
-The installer clones the repo, creates `data/idle`, creates `.env` from `.env.example`, asks for the admin PIN, app/backend ports and currency symbol, generates a session secret, builds and starts the stack, waits for the health check and prints the LAN URLs. If it detects an existing install it stops without changing anything and points you to `upgrade.sh`.
+The installer clones the repo, creates `data/idle`, creates `.env` from `env.template`, asks for the admin PIN, app/backend ports and currency symbol, generates a session secret, builds and starts the stack, waits for the health check and prints the LAN URLs. If it detects an existing install it stops without changing anything and points you to `upgrade.sh`.
 
 ## Upgrade
 
@@ -40,7 +40,7 @@ The installer clones the repo, creates `data/idle`, creates `.env` from `.env.ex
 cd /opt/sanctuary-screens && sudo ./upgrade.sh
 ```
 
-- backs up `.env` to `backups/`, pulls with fast-forward only, adds any new settings from `.env.example` without overwriting yours
+- backs up `.env` to `backups/`, pulls with fast-forward only, adds any new settings from `env.template` without overwriting yours
 - rebuilds images and restarts; the MongoDB volume (register history, translations, prepared lists) is never deleted
 - database migrations / index updates run automatically when the backend starts
 - verifies health and prints success, or prints logs plus the exact rollback command
@@ -48,7 +48,7 @@ cd /opt/sanctuary-screens && sudo ./upgrade.sh
 
 ## Configuration (`.env`)
 
-See `.env.example`. Key settings: `ADMIN_PIN` (4 digits, shared by both admin pages), `APP_PORT`, `BACKEND_PORT`, `CURRENCY_SYMBOL`, `IDLE_TITLE`, `IDLE_SUBTITLE`, `MONGO_IMAGE` (use `mongo:4.4` if the CPU lacks AVX). After editing run `docker compose up -d`.
+See `env.template` (the installer copies it to `.env`; the template is not a dot-file so it always syncs to GitHub). Key settings: `ADMIN_PIN` (4 digits, shared by both admin pages), `APP_PORT`, `BACKEND_PORT`, `CURRENCY_SYMBOL`, `IDLE_TITLE`, `IDLE_SUBTITLE`, `MONGO_IMAGE` (use `mongo:4.4` if the CPU lacks AVX). After editing run `docker compose up -d`.
 
 The PIN is stored in the database only as a bcrypt hash. Five wrong PIN attempts lock the device out for 5 minutes. Admin sessions last 12 hours per browser.
 
@@ -107,6 +107,6 @@ docker compose down               # stop (data is kept; never add -v)
 ```
 backend/    FastAPI app (server.py, bible_routes.py, register_routes.py, importer.py, reference.py, books.py), Dockerfile, seed/kjv.csv
 frontend/   React app, Dockerfile, nginx/default.conf.template
-docker-compose.yml  .env.example  install.sh  upgrade.sh  scripts/common.sh
+docker-compose.yml  env.template  install.sh  upgrade.sh  scripts/common.sh
 data/idle/  optional idle slide image (mounted read-only into the backend)
 ```

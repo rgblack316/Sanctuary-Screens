@@ -24,7 +24,6 @@ export const IdleWelcome = ({ idle, appearance: a, churchName, logoUrl }) => {
         <img src={assetUrl(logoUrl)} alt="" data-testid="bible-idle-logo" className="mb-[4vmin] object-contain"
           style={{ height: `${6 + (a.church_logo_size || 5) * 1.6}vmin`, maxWidth: "40vw" }} />
       )}
-      <div className="mb-[4vmin] h-[0.5vmin] w-[10vmin]" style={{ background: "var(--ss-accent, #f59e0b)" }} />
       {showName ? (
         <>
           <p className="font-display font-bold ss-text" style={{ fontSize: "5.5vmin" }} data-testid="bible-idle-title">

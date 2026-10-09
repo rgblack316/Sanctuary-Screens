@@ -59,9 +59,10 @@ ok "Data directories ready (data/idle for the idle slide image)"
 # 4. Configuration
 if [ -f .env ]; then
   ok "Keeping existing .env"
-  merge_new_env_keys .env.example .env
+  merge_new_env_keys env.template .env
 else
-  cp .env.example .env
+  [ -f env.template ] || die "env.template is missing from the repository – re-clone or pull the latest code."
+  cp env.template .env
   chmod 600 .env
   if [ -n "${ADMIN_PIN:-}" ]; then
     [[ "$ADMIN_PIN" =~ ^[0-9]{4}$ ]] || die "ADMIN_PIN must be 4 digits"

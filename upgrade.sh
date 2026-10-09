@@ -48,7 +48,7 @@ if [ $PULL -eq 1 ] && [ $REEXEC -eq 0 ]; then
 fi
 
 # 3. Configuration: add new settings only, never overwrite existing ones
-merge_new_env_keys .env.example .env
+merge_new_env_keys env.template .env
 if [ $RESET_PIN -eq 1 ]; then
   prompt_pin
   env_set ADMIN_PIN "$PIN" .env

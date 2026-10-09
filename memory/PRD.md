@@ -45,6 +45,10 @@ See original problem statement; acceptance criteria listed there.
 - Bug fix: /bible idle slide overlapped church name with the accent bar. Idle now shows: logo (optional) → accent bar → "Welcome to" → church name (name color/caps settings) → today's date → optional subtitle. Falls back to "Welcome" + date when no name or name hidden.
 - Testing: iteration_5 – all idle scenarios pass
 
+## Implemented (2026-10-09, iteration 6)
+- Removed accent line from idle welcome
+- Renamed .env.example -> env.template (dot-files don't sync to GitHub from Emergent); install.sh/upgrade.sh/common.sh/README updated
+
 ## Backlog
 - P1: Run install.sh on the real NUC and verify host networking, reboot persistence, offline use
 - P1: Final idle slide design asset

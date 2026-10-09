@@ -42,7 +42,8 @@ env_set() { # env_set KEY VALUE FILE  (replaces or appends one line)
   cat "$tmp" > "$3"; rm -f "$tmp"
 }
 
-merge_new_env_keys() { # add keys present in .env.example but missing from .env, never overwrite
+merge_new_env_keys() { # add keys present in env.template but missing from .env, never overwrite
+  [ -f "$1" ] || { warn "$1 not found – skipping new-settings check"; return 0; }
   local example="$1" target="$2" added=0
   while IFS= read -r line; do
     [[ "$line" =~ ^[A-Z_][A-Z0-9_]*= ]] || continue
