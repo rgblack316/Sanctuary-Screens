@@ -29,6 +29,7 @@ class AppearanceIn(BaseModel):
     translation_show: bool = True
     translation_position: Position = "bottom-right"
     reference_size: int = Field(5, ge=1, le=10)
+    verse_size: int = Field(5, ge=1, le=10)
 
 
 DEFAULTS = {

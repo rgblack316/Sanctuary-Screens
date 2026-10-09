@@ -19,7 +19,7 @@ const COLOR_LABELS = {
 const KEYS = ["background_color", "text_color", "accent_color", "muted_color", "panel_color", "panel_opacity",
   "image_blur", "image_dim", "image_motion", "motion_speed", "church_name_show", "church_name_position",
   "church_name_size", "church_name_color", "church_name_uppercase", "church_logo_show", "church_logo_size",
-  "translation_show", "translation_position", "reference_size"];
+  "translation_show", "translation_position", "reference_size", "verse_size"];
 const same = (a, b) => a && b && KEYS.every((k) => a[k] === b[k]);
 
 const Toggle = ({ active, onClick, children, testid }) => (

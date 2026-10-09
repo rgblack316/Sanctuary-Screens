@@ -18,7 +18,7 @@ const SAMPLE = {
 const baseSize = (n) => (n < 80 ? 8 : n < 160 ? 6.6 : n < 280 ? 5.4 : n < 420 ? 4.6 : n < 600 ? 3.9 : 3.3);
 
 // Shrinks the reference + verse group until it fits the box (handles very long verses on small screens).
-function FitText({ text, reference }) {
+function FitText({ text, reference, scale = 1, refSize }) {
   const boxRef = useRef(null);
   const groupRef = useRef(null);
   const textRef = useRef(null);
@@ -36,14 +36,14 @@ function FitText({ text, reference }) {
     const group = groupRef.current;
     const el = textRef.current;
     if (!box || !el || !group) return;
-    let s = baseSize(text.length);
+    let s = baseSize(text.length) * scale;
     el.style.fontSize = `${s}vmin`;
     while (s > 1.6 && (group.scrollHeight > box.clientHeight || el.scrollWidth > box.clientWidth)) {
       s *= 0.93;
       el.style.fontSize = `${s}vmin`;
     }
     setSize(s);
-  }, [text, tick]);
+  }, [text, tick, scale, refSize]);
 
   return (
     <div ref={boxRef} className="bible-text-box">
@@ -83,7 +83,8 @@ export default function BibleDisplay() {
           <DisplayBackground appearance={appearance} />
           <ChurchName name={churchName} logoUrl={logoUrl} appearance={appearance} place="top" />
           <SlideMeta place="top" appearance={appearance} translationCode={data.translation_code} />
-          <FitText text={data.slide.verse_text} reference={data.slide.reference_label} />
+          <FitText text={data.slide.verse_text} reference={data.slide.reference_label}
+            scale={0.6 + (appearance?.verse_size ?? 5) * 0.08} refSize={appearance?.reference_size} />
           <SlideMeta place="bottom" appearance={appearance} translationCode={data.translation_code}
             counter={data.total > 1 ? `${data.slide_index + 1} / ${data.total}` : null} />
           <div className="mt-[2vmin]"><ChurchName name={churchName} logoUrl={logoUrl} appearance={appearance} place="bottom" /></div>
