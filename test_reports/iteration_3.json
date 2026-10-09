@@ -1,0 +1,29 @@
+{
+  "summary": "Tested iteration-3 Church Name feature end-to-end: (1) new backend endpoint PUT /api/appearance/church-name with settings-token auth, trim, 120-char limit, empty allowed; (2) new appearance fields church_name_show/position/size/color/uppercase on both register & bible with Position Literal + hex validation; (3) church_name included in public /api/register/display and /api/bible/display payloads; (4) full UI flow in SettingsAdmin: both Bible and Register tabs render church-name-panel, church-name-input shared, show/position/size/color/uppercase controls, dirty-state fires on name-only change, save persists name + per-display styling; (5) live /register and /bible WebSocket-driven displays render church-name-top / church-name-bottom with correct data-position, text, color, text-transform; (6) per-display independence verified — top-center on /register coexists with bottom-right on /bible; hiding on /bible leaves /register unaffected; (7) regression on existing appearance (parallax, panel_opacity, colors), PIN change + pin_version token invalidation. Added test_church_name.py (14 new tests, all pass). All 68 backend tests pass sequentially; 2/68 flake only under xdist loadscope parallelism because TestChangePin temporarily rotates the shared PIN while another worker tries to unlock — pre-existing cross-worker race unrelated to this iteration.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_church_name.py",
+    "/app/backend/tests/test_appearance_pin.py",
+    "/app/backend/tests/test_sanctuary.py",
+    "/app/test_reports/pytest/church_name_results.xml",
+    "/app/test_reports/pytest/all_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "appearance.py: church_name is stored on site_settings (shared), styling fields on display_appearance (per-display) — clean separation; GET /appearance/{display} returns both. Good.",
+    "appearance_routes.py update_church_name trims and broadcasts to BOTH register and bible channels — correct for shared field. Good.",
+    "ChurchName component in DisplayBackground.jsx returns null when vert !== place, which lets the same element be rendered twice (top slot + bottom slot) with only the matching one visible — simple and robust.",
+    "church-name-size slider uses testid pattern '{testid}-slider' from RangeField, so the testids on the slider itself are 'church-name-size-slider' / '-value' / '-field' rather than literal 'church-name-size' — functionally fine, worth noting for future test-id docs.",
+    "update_appearance uses full-replace $set with model_dump(); partial PUT bodies would reset other fields to defaults — frontend currently always sends full form so this is safe but a PATCH-style merge is safer (same comment as iteration-2).",
+    "No cross-worker lock in TestChangePin; cross-worker race under xdist loadscope is pre-existing — recommend running change-pin tests in isolation or adding a module-level xdist group."
+  ],
+  "updated_files": ["/app/backend/tests/test_church_name.py"],
+  "success_rate": {"backend": "100% (68/68 sequential; 14/14 new)", "frontend": "100% of church-name UI + live display flows"},
+  "test_credentials": "Admin PIN 1234 (shared register/bible/settings).",
+  "seed_data_creation": "Set church_name='Test Grace Chapel' + custom positions during UI test, then reset: church_name='', register appearance reset to its own defaults (panel_opacity=100), bible appearance reset to its own defaults (panel_opacity=0), no images, bible display mode='idle', pin_attempts cleared, PIN=1234.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "To run full suite deterministically use `pytest -n 0` (serial). Church-name tests live in /app/backend/tests/test_church_name.py and cleanup is idempotent in teardown_module. Public preview URL for this app is https://church-live-display.preview.emergentagent.com (REACT_APP_BACKEND_URL in frontend/.env). PIN input on /settings-admin is autoFocus; use page.keyboard.type('1234'). ChurchName component renders two slot elements (top/bottom) and shows only the one matching data-position prefix, so always probe both data-testid='church-name-top' and data-testid='church-name-bottom'.",
+  "rca of the issue": "No bugs found."
+}

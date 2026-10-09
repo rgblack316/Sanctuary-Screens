@@ -30,6 +30,11 @@ See original problem statement; acceptance criteria listed there.
 - PIN change in UI (pin_version in JWT invalidates all other sessions); ADMIN_PIN env re-applies only when its value changes (fingerprint) or via upgrade.sh --reset-pin
 - Testing: iteration_2 – 54/54 backend tests, frontend flows pass
 
+## Implemented (2026-10-09, iteration 3)
+- User request: "Add the ability in the settings to set a church name to be displayed. Add the ability to customize how that is displayed on both the register and bible displays as part of the other customizations."
+- Church name (shared, site_settings) set in /settings-admin; per-display show/hide, 6 positions, size, color, all-caps; rendered on /register, /bible passage and idle slides; live preview + WS push
+- Testing: iteration_3 – 68/68 backend tests, frontend flows pass
+
 ## Backlog
 - P1: Run install.sh on the real NUC and verify host networking, reboot persistence, offline use
 - P1: Final idle slide design asset
