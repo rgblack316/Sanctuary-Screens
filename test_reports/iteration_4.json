@@ -1,0 +1,30 @@
+{
+  "summary": "Iteration-4 full test of (1) comparison_service_date override on PUT /api/register/services/{date} and (2) church-logo upload/delete/display beside church name. Added /app/backend/tests/test_iter4.py (21 new tests, all pass). Full backend suite now 89/89 passing serially. UI tested via Playwright on /register-admin (compare-selector mode toggle, publish-disabled-in-custom-until-pick, options populated from only earlier recorded services) and /settings-admin (logo-input upload → logo-thumb/remove-btn render, logo shared across Bible/Register tabs, church-logo-show-switch & church-logo-size-slider present, appearance save with church name 'TEST Chapel' + logo). Live /register page then rendered church-name-top with child church-logo-top img beside the name. Regression unaffected: church name, colors, bg image, bible flows still green. State fully restored: church_name='', no logo, active service back to original 2026-10-04 (test_sanctuary teardown had moved it to 2026-10-09, now reverted), both appearances at defaults, pin_attempts cleared, bible display idle.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter4.py",
+    "/app/test_reports/pytest/iter4_results.xml",
+    "/app/test_reports/pytest/all_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "register_routes.upsert_service: comparison validation is correct — rejects same-day/future (c >= d → 422) and missing records (422). Passing null restores auto -7d and sets comparison_overridden=False. Good.",
+    "Service model persists comparison_service_date AND comparison_overridden, so edit mode in ServiceForm can faithfully restore the saved mode via useEffect→fill(). Good.",
+    "appearance_routes._store_image reused for both /logo and /{display}/image — single validation path for content-type/size/empty. Clean.",
+    "upload_logo deletes the previously stored image_id from display_images AFTER updating site_settings — safe ordering, old URL correctly 404s after replace (verified in test_f).",
+    "get_site centralises both church_name and church_logo_url and is spread into /register/display and /bible/display payloads — shared field correctness confirmed.",
+    "DisplayBackground.ChurchName returns null if (!name && !logo) so an empty-name/no-logo case correctly renders nothing; when logo-only is desired it still shows (verified by code: `(!name?.trim() && !logo)` guard).",
+    "ImageField reuses testid prefix pattern so logo-input/logo-thumb/logo-remove-btn match the review request; fit='contain' passed for logo so transparent padding is preserved.",
+    "Minor: PUT /appearance/{display} is still full-replace $set; sending a partial body resets other appearance fields to defaults. Not a regression — same as prior iterations and the frontend sends the full form.",
+    "Minor: setup_module/teardown_module in test_sanctuary.TestRegister restores active to latest-by-date, which can bump active from the user's intended value (e.g. 2026-10-04) to a later empty record (2026-10-09). Not an app bug but worth noting in the shared test harness; iter4 teardown explicitly re-pins active to the pre-run value."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter4.py"],
+  "success_rate": {"backend": "100% (89/89, 21/21 new)", "frontend": "100% of compare-selector + logo upload + live render flows"},
+  "test_credentials": "Admin PIN 1234 (register/bible/settings).",
+  "seed_data_creation": "Created test services on 2030-01-06/13/20 and uploaded a 1x1 PNG logo during tests; all deleted in teardown_module and via DELETE /api/appearance/logo. Final verified state: church_name='', church_logo_url=None, active=2026-10-04 (original), register & bible appearance at own defaults, pin_attempts empty, bible mode=idle.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Suite now has 4 test files (test_sanctuary.py, test_appearance_pin.py, test_church_name.py, test_iter4.py = 89 tests). Run serial with `pytest -n 0`. iter4 covers: comparison override 422/overridden flag/null-restores-auto/list persistence; logo upload/replace/delete/415/empty/auth; appearance church_logo_show+size roundtrip + bounds. Pre-existing empty 2026-10-09 user record exists; original active was 2026-10-04 — iter4 setup_module captures and restores it in teardown. Compare-date-option testids follow pattern compare-date-option-YYYY-MM-DD. Logo thumb testid is 'logo-thumb', inside Select overlay closing is required before clicking neighbouring buttons.",
+  "rca of the issue": "No bugs found."
+}

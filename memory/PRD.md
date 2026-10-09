@@ -35,6 +35,12 @@ See original problem statement; acceptance criteria listed there.
 - Church name (shared, site_settings) set in /settings-admin; per-display show/hide, 6 positions, size, color, all-caps; rendered on /register, /bible passage and idle slides; live preview + WS push
 - Testing: iteration_3 – 68/68 backend tests, frontend flows pass
 
+## Implemented (2026-10-09, iteration 4)
+- User request: "Add an option to select a different date for the previous service attendance and offering in the case of a service that is cancelled, rescheduled, etc." + "Church Logo: Let admins upload a church logo that can sit beside the name on both displays"
+- Register: per-service comparison override (comparison_service_date + comparison_overridden); admin "Compare with" selector (7 days earlier / another earlier recorded service)
+- Church logo: shared upload (site_settings.logo_image_id, stored in display_images), per-display show + size, rendered beside the name at the name position (logo alone if no name)
+- Testing: iteration_4 – 89/89 backend tests, frontend flows pass
+
 ## Backlog
 - P1: Run install.sh on the real NUC and verify host networking, reboot persistence, offline use
 - P1: Final idle slide design asset
