@@ -1,0 +1,33 @@
+# Sanctuary Screens – PRD
+
+## Original problem statement
+Church Display System POC – a fully local, Dockerized web app for the church Intel NUC with two separate live display functions: `/register` (attendance & offering display, current + exactly 7 days earlier, N/A if missing) and `/bible` (scripture display during sermons, one verse per slide, default idle slide, real-time updates). PIN-protected `/register-admin` and `/bible-admin` (one shared 4-digit PIN via env, hashed). Local Bible translation CSV import/delete/select (schema: translation, book, chapter, verse, text), KJV first, MongoDB storage with indexes, staging validation before commit, deletion safeguards (not live, not last). Prepared scripture list + ad-hoc lookup, manual text fallback, next/prev, clear-to-idle, WebSocket reconnect + resync. Docker Compose stack (frontend, backend, MongoDB), host networking, ports 8091/8092 (never 80/8080), MongoDB not on LAN, persistent volume. install.sh and upgrade.sh from GitHub (idempotent, never overwrite .env or delete data). README, .env.example. Full spec as provided by the user in the first message.
+
+User choices: bundle public-domain KJV CSV and auto-import on first start; currency symbol from .env (default $); repo https://github.com/rgblack316/Sanctuary-Screens; preview PIN 1234; include cross-chapter ranges.
+
+## Architecture
+- backend/ FastAPI: server.py (PIN unlock + JWT per area, lockout, WS /api/ws/{register|bible}, startup indexes/migrations/PIN hash/KJV seed), register_routes.py, bible_routes.py, importer.py (CSV staging validation), reference.py (parser incl. cross-chapter), books.py (book normalisation), models.py
+- frontend/ React: /, /register, /register-admin, /bible, /bible-admin; useLiveChannel (reconnect, heartbeat, HTTP fallback poll); fonts bundled locally (fontsource)
+- Deploy: docker-compose.yml (mongo bridge on 127.0.0.1:27027; backend+nginx frontend host network), Dockerfiles, nginx template, .env.example, install.sh, upgrade.sh, scripts/common.sh, data/idle (idle image drop-in)
+
+## User personas
+- Service operator (Bible admin, runs slides during sermon)
+- Counter/treasurer (enters attendance and offering)
+- Congregation (views displays)
+- Tech volunteer (installs/upgrades on NUC)
+
+## Core requirements (static)
+See original problem statement; acceptance criteria listed there.
+
+## Implemented (2026-10-09)
+- All four routes, PIN gate, register flow with exact 7-day comparison, Bible lookup/preview/edit/publish/next/prev/goto/clear/live translation switch, prepared list CRUD + reorder, translation import/validate/replace/delete/default, idle slide (env text or image in data/idle), WS live sync + reconnect
+- Docker/compose/nginx, install.sh, upgrade.sh (--reset-pin, --no-pull), README
+- Testing: iteration_1 – backend 39/39, frontend critical flows pass. Docker build/scripts only syntax-checked (no Docker in preview).
+
+## Backlog
+- P1: Run install.sh on the real NUC and verify host networking, reboot persistence, offline use
+- P1: Final idle slide design asset
+- P2: backup.sh, reusable prepared templates, long-verse layout refinement, multi-operator conflict handling
+
+## Next tasks
+- On-NUC install validation; push repo to GitHub
