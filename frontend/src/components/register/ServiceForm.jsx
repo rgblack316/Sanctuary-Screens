@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { errMsg, registerApi, todayLocal } from "@/lib/api";
 import { CompareSelector, minusSeven } from "@/components/register/CompareSelector";
+import { DatePicker } from "@/components/DatePicker";
 
 const INT_RE = /^\d*$/;
 const MONEY_RE = /^\d*(\.\d{0,2})?$/;
@@ -98,10 +99,10 @@ export const ServiceForm = ({ services, live, editing, onSaved }) => {
     >
       <form onSubmit={submit} className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block">
+          <div className="block">
             <span className="label-caps">Service date</span>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} data-testid="service-date-input" className="mt-2 h-11 bg-[#0B0E14]" />
-          </label>
+            <DatePicker value={date} onChange={setDate} testid="service-date" />
+          </div>
           <label className="block">
             <span className="label-caps">Label</span>
             <Input value={label} maxLength={80} onChange={(e) => setLabel(e.target.value)} data-testid="service-label-input" className="mt-2 h-11 bg-[#0B0E14]" />

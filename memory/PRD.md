@@ -67,6 +67,7 @@ See original problem statement; acceptance criteria listed there.
 
 ## Implemented (2026-10-09, iteration 11)
 - Prepared scripture service date: calendar popover button (plus "Today") beside the typed date input (components/DatePicker.jsx)
+- Register Admin service date: same calendar picker (DatePicker, testid service-date-*)
 
 ## Backlog
 - P1: Run install.sh on the real NUC and verify host networking, reboot persistence, offline use
