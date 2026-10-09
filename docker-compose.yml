@@ -1,0 +1,66 @@
+name: sanctuary-screens
+
+# Frontend + backend use host networking (they share the NUC's LAN IP).
+# MongoDB stays on Docker's bridge network and is published on 127.0.0.1 only (never on the LAN).
+services:
+  mongodb:
+    image: ${MONGO_IMAGE:-mongo:7.0}
+    container_name: sanctuary-screens-mongodb
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MONGO_HOST_PORT:-27027}:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok' || mongo --quiet --eval 'db.adminCommand(\"ping\").ok'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  backend:
+    build: ./backend
+    image: sanctuary-screens-backend:latest
+    container_name: sanctuary-screens-backend
+    restart: unless-stopped
+    network_mode: host
+    env_file: .env
+    environment:
+      MONGO_URL: mongodb://127.0.0.1:${MONGO_HOST_PORT:-27027}
+      DB_NAME: ${DB_NAME:-sanctuary_screens}
+      BACKEND_PORT: ${BACKEND_PORT:-8092}
+      BACKEND_BIND: ${BACKEND_BIND:-127.0.0.1}
+      IDLE_ASSET_DIR: /app/data/idle
+    volumes:
+      - ./data/idle:/app/data/idle:ro
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os,urllib.request;urllib.request.urlopen('http://127.0.0.1:'+os.environ['BACKEND_PORT']+'/api/health',timeout=4)\""]
+      interval: 10s
+      timeout: 6s
+      retries: 12
+      start_period: 20s
+
+  frontend:
+    build: ./frontend
+    image: sanctuary-screens-frontend:latest
+    container_name: sanctuary-screens-frontend
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      APP_PORT: ${APP_PORT:-8091}
+      BACKEND_PORT: ${BACKEND_PORT:-8092}
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:$${APP_PORT}/api/health >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 10s
+
+volumes:
+  mongo_data:

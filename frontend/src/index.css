@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 222 28% 5%;
+        --foreground: 210 40% 98%;
+        --card: 222 27% 10%;
+        --card-foreground: 210 40% 98%;
+        --popover: 222 27% 10%;
+        --popover-foreground: 210 40% 98%;
+        --primary: 38 92% 50%;
+        --primary-foreground: 222 28% 6%;
+        --secondary: 220 26% 14%;
+        --secondary-foreground: 210 40% 96%;
+        --muted: 220 26% 14%;
+        --muted-foreground: 215 20% 65%;
+        --accent: 220 26% 16%;
+        --accent-foreground: 210 40% 98%;
+        --destructive: 350 89% 60%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 221 29% 19%;
+        --input: 221 29% 22%;
+        --ring: 38 92% 50%;
+        --radius: 0.5rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+        font-family: "Manrope", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
+    ::selection {
+        background: #f59e0b55;
+    }
+}
+
+.font-display { font-family: "Outfit", system-ui, sans-serif; }
+.font-mono-ui { font-family: "JetBrains Mono", monospace; }
+.label-caps { @apply text-xs uppercase tracking-[0.18em] font-semibold text-slate-400; }
+
+/* ---------- live register display ---------- */
+.reg-screen {
+    height: 100vh; width: 100vw; overflow: hidden;
+    background: #090b10; color: #f8fafc;
+    display: flex; flex-direction: column;
+    padding: 3.5vmin; gap: 2.5vmin;
+}
+.reg-grid {
+    flex: 1; min-height: 0; display: grid; gap: 2.5vmin;
+    grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+}
+.reg-tile {
+    background: #121620; border: 1px solid #222b3e; border-radius: 1.2vmin;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 3vmin 4vmin; min-height: 0; min-width: 0;
+}
+.reg-tile.current { border-color: #f59e0b55; }
+.reg-label { font-size: clamp(0.9rem, min(3.2vh, 2.2vw), 3rem); }
+.reg-sub { font-size: clamp(0.75rem, min(2.2vh, 1.5vw), 2rem); }
+.reg-value {
+    font-family: "Outfit", system-ui, sans-serif; font-weight: 900; line-height: 1;
+    letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+    font-size: clamp(2.5rem, min(16vh, 8.5vw), 18rem);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.reg-value.na { color: #64748b; }
+@media (orientation: portrait) {
+    .reg-grid { grid-template-columns: 1fr; grid-template-rows: repeat(4, 1fr); }
+    .reg-value { font-size: clamp(2.5rem, min(9vh, 15vw), 14rem); }
+    .reg-label { font-size: clamp(0.9rem, min(2.2vh, 4vw), 3rem); }
+    .reg-sub { font-size: clamp(0.75rem, min(1.6vh, 3vw), 2rem); }
+}
+
+/* ---------- live bible display ---------- */
+.bible-screen {
+    height: 100vh; width: 100vw; overflow: hidden; position: relative;
+    background: #090b10; color: #f8fafc;
+    display: flex; flex-direction: column;
+    padding: 5vmin 6vmin 4vmin;
+}
+.bible-text-box { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.bible-text {
+    font-family: "Manrope", system-ui, sans-serif; font-weight: 600; line-height: 1.32;
+    text-align: center; max-width: 92vw; text-wrap: balance;
+}
+.bible-ref {
+    font-family: "Outfit", system-ui, sans-serif; font-weight: 700; color: #f59e0b;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    font-size: clamp(1rem, 4vmin, 4rem);
+}
+.bible-meta { font-size: clamp(0.75rem, 2.2vmin, 2rem); color: #94a3b8; }
+.fade-in { animation: fadeIn 280ms ease-out both; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(0.6vmin); } to { opacity: 1; transform: none; } }
+.rise-in { animation: fadeIn 420ms ease-out both; }

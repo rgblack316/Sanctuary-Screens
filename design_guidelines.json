@@ -1,0 +1,82 @@
+{
+  "project_title": "Church Display System POC",
+  "app_type": "dashboard (live display + operator console)",
+  "design_archetype": "Swiss & High-Contrast (Clarity & Command)",
+  "theme_strategy": {
+    "live_displays": {
+      "mode": "dark",
+      "rationale": "High contrast white/gold on deep charcoal (#0A0D14) for maximum legibility from the back row in sanctuary environments without distracting light bleed."
+    },
+    "operator_consoles": {
+      "mode": "dark_sleek",
+      "rationale": "Command center aesthetic with crisp 1px borders, subtle surface contrast, clear visual status indicators, and distinct live output mirrors."
+    }
+  },
+  "typography": {
+    "font_family_display": "Outfit, system-ui, sans-serif",
+    "font_family_body": "Manrope, system-ui, sans-serif",
+    "font_family_mono": "JetBrains Mono, monospace",
+    "google_fonts_import": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Manrope:wght@400;500;600;700&family=Outfit:wght@500;700;800;900&display=swap",
+    "rules": {
+      "live_display_numbers": "text-6xl sm:text-7xl md:text-8xl font-black tracking-tight font-display",
+      "live_display_scripture": "text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold leading-relaxed max-w-5xl",
+      "live_display_reference": "text-xl sm:text-2xl md:text-3xl font-bold uppercase tracking-widest text-amber-400 font-display",
+      "admin_headers": "text-2xl sm:text-3xl font-bold font-display tracking-tight text-slate-100",
+      "admin_labels": "text-xs uppercase tracking-wider font-semibold text-slate-400"
+    }
+  },
+  "colors": {
+    "background_display": "#090B10",
+    "background_card": "#121620",
+    "background_card_hover": "#1A202C",
+    "border_subtle": "#222B3E",
+    "border_active": "#3B82F6",
+    "text_primary": "#F8FAFC",
+    "text_secondary": "#94A3B8",
+    "accent_gold": "#F59E0B",
+    "accent_gold_glow": "#F59E0B20",
+    "accent_blue": "#3B82F6",
+    "status_live": "#10B981",
+    "status_idle": "#64748B",
+    "status_offline": "#EF4444",
+    "destructive": "#F43F5E"
+  },
+  "layout_and_responsive_rules": {
+    "live_register": {
+      "portrait_1080x1920": "flex flex-col h-screen w-screen p-8 lg:p-12 gap-6 justify-center",
+      "landscape_1920x1080": "grid grid-cols-2 grid-rows-2 h-screen w-screen p-10 lg:p-16 gap-8 items-stretch"
+    },
+    "live_bible": {
+      "viewport_fill": "flex flex-col justify-between h-screen w-screen p-12 lg:p-20 bg-[#090B10] text-slate-50 text-center relative overflow-hidden",
+      "scripture_container": "flex-1 flex flex-col justify-center items-center text-center max-w-6xl mx-auto"
+    },
+    "admin_consoles": {
+      "container": "min-h-screen bg-[#0B0E14] text-slate-100 p-4 md:p-8 max-w-7xl mx-auto space-y-8",
+      "pin_gate": "min-h-screen flex items-center justify-center bg-[#090B10] p-4"
+    }
+  },
+  "image_urls": {
+    "sanctuary_background_1": "https://images.unsplash.com/photo-1760046317030-d257b1d2b1b9?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "sanctuary_background_2": "https://images.unsplash.com/photo-1769184615259-e609796f63e3?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "usage_note": "Use only as subtle background texture with minimum opacity (10-15%) or blur overlay on idle slides to maintain crisp readability."
+  },
+  "key_features_and_components": {
+    "websocket_status_pill": "Top-right corner indicator showing live WS state (Connected = Green dot with subtle ring glow, Reconnecting = Yellow pulse, Disconnected = Red warning) with data-testid='ws-status-badge'.",
+    "register_display": "Four primary metric blocks: Attendance This Week, Offering This Week, Attendance Previous Week, Offering Previous Week. Format monetary values clean with currency symbol. Exactly 7-day prior matching or N/A.",
+    "register_admin": "4-digit PIN gate input (data-testid='pin-input'). Form with Service Date, Label, Attendance, Offering, Quick Numeric Incrementers (+10, +50, +100, +$100, +$500), and Publish button with clear active state.",
+    "bible_display": "Scripture slide container. Handles large dynamic verse scaling, translation badge, verse reference footer, and clean idle state slide when no verse is active.",
+    "bible_admin": "PIN gate, translation manager (CSV upload dropzone, translation list, deletion modal), quick lookup field (Book Chapter:Verse e.g. John 3:16), verse preview card, manual edit textarea, Prev/Next slide controls, Live Publish button, and Clear-to-Idle CTA."
+  },
+  "component_guidelines": {
+    "shadcn_components": "Use custom styled Shadcn components in src/components/ui/ for Dialogs, Cards, Inputs, Selects, Buttons, Tabs, and Toasts.",
+    "toast_notifications": "Use Sonner (`sonner`) toast notifications located at `/app/src/components/ui/sonner.js` for operator actions (e.g. Published, Translation Deleted, Service Saved).",
+    "testing_attribute_requirement": "EVERY interactive element and primary output data display MUST include a `data-testid` attribute using kebab-case e.g. data-testid='publish-register-btn', data-testid='attendance-this-week-value', data-testid='bible-lookup-input', data-testid='pin-input'."
+  },
+  "instructions_to_main_agent": [
+    "Ensure all file paths are JavaScript (.js / .jsx).",
+    "Inject Google Fonts (Outfit & Manrope) in public/index.html or top-level CSS.",
+    "Ensure WebSocket real-time updates broadcast instantly to all connected /register and /bible displays.",
+    "Validate screen orientation on /register to automatically apply flex-col for portrait and 2x2 grid for landscape.",
+    "Avoid fancy drop-shadows or gradients on scripture slides to prevent projection distortion."
+  ]
+}
