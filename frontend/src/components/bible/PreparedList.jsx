@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowDown, ArrowUp, MonitorUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { Panel } from "@/components/AdminShell";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { bibleApi, errMsg, todayLocal } from "@/lib/api";
 import { lookupDraft, manualDraft, publishDraft } from "@/lib/bible";
 import { PreparedDialog } from "@/components/bible/PreparedDialog";
+import { DatePicker } from "@/components/DatePicker";
 
 const IconBtn = ({ onClick, label, testid, children, danger }) => (
   <button
@@ -71,10 +71,10 @@ export const PreparedList = ({ translations, defaultCode, onLoad }) => {
         </Button>
       }
     >
-      <label className="block">
+      <div className="block">
         <span className="label-caps">Service date</span>
-        <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} data-testid="prepared-date-input" className="mt-2 h-10 bg-[#0B0E14]" />
-      </label>
+        <DatePicker value={date} onChange={setDate} testid="prepared-date" />
+      </div>
       <ol className="mt-4 space-y-2" data-testid="prepared-list">
         {items.length === 0 && <li className="text-sm text-slate-500" data-testid="prepared-empty">No scriptures prepared for this date.</li>}
         {items.map((it, i) => (

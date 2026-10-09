@@ -65,6 +65,9 @@ See original problem statement; acceptance criteria listed there.
 - Saved Looks per display (display_looks): save current tab settings + background under a name, apply (live WS push, "On screen" badge), update, delete; images referenced by looks are never deleted (release_image ref-check)
 - Testing: iteration_9 passed. Incident: the test run removed the user's Bible background image (must be re-uploaded).
 
+## Implemented (2026-10-09, iteration 11)
+- Prepared scripture service date: calendar popover button (plus "Today") beside the typed date input (components/DatePicker.jsx)
+
 ## Backlog
 - P1: Run install.sh on the real NUC and verify host networking, reboot persistence, offline use
 - P1: Final idle slide design asset
