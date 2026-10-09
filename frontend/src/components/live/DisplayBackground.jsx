@@ -43,8 +43,8 @@ export const DisplayBackground = ({ appearance: a }) => {
 const ALIGN = { left: "left", center: "center", right: "right" };
 const JUSTIFY = { left: "flex-start", center: "center", right: "flex-end" };
 
-// Church name + logo row; `place` is "top" or "bottom". `floating` pins it over centered layouts (idle slide).
-export const ChurchName = ({ name, logoUrl, appearance: a, place, floating = false }) => {
+// Church name + logo row; `place` is "top" or "bottom".
+export const ChurchName = ({ name, logoUrl, appearance: a, place }) => {
   const logo = a?.church_logo_show && logoUrl ? logoUrl : null;
   if (!a?.church_name_show || (!name?.trim() && !logo)) return null;
   const [vert, horiz] = a.church_name_position.split("-");
@@ -53,7 +53,7 @@ export const ChurchName = ({ name, logoUrl, appearance: a, place, floating = fal
     <div
       data-testid={`church-name-${place}`}
       data-position={a.church_name_position}
-      className={`flex items-center gap-[2vmin] font-display font-bold leading-tight ${floating ? "absolute left-[6vmin] right-[6vmin]" : ""}`}
+      className="flex items-center gap-[2vmin] font-display font-bold leading-tight"
       style={{
         justifyContent: JUSTIFY[horiz],
         textAlign: ALIGN[horiz],
@@ -61,7 +61,6 @@ export const ChurchName = ({ name, logoUrl, appearance: a, place, floating = fal
         fontSize: `${1.6 + a.church_name_size * 0.55}vmin`,
         textTransform: a.church_name_uppercase ? "uppercase" : "none",
         letterSpacing: a.church_name_uppercase ? "0.14em" : "0.01em",
-        ...(floating ? { [place]: "4vmin", zIndex: 2 } : {}),
       }}
     >
       {logo && (

@@ -4,6 +4,7 @@ import { usePreview } from "@/hooks/usePreview";
 import { WsStatus } from "@/components/live/WsStatus";
 import { DisplayBackground, ChurchName, appearanceVars } from "@/components/live/DisplayBackground";
 import { assetUrl } from "@/lib/api";
+import { IdleWelcome } from "@/components/live/IdleWelcome";
 
 const SAMPLE = {
   mode: "passage", translation_code: "KJV", slide_index: 0, total: 3,
@@ -56,19 +57,7 @@ const IdleSlide = ({ idle, appearance, churchName, logoUrl }) => (
     {idle?.image_url && (
       <img src={assetUrl(idle.image_url)} alt="" data-testid="bible-idle-image" className="absolute inset-0 h-full w-full object-cover" />
     )}
-    <ChurchName name={churchName} logoUrl={logoUrl} appearance={appearance} place="top" floating />
-    <ChurchName name={churchName} logoUrl={logoUrl} appearance={appearance} place="bottom" floating />
-    {!idle?.image_url && (
-      <div className="fade-in relative">
-        <div className="mx-auto mb-[4vmin] h-[0.5vmin] w-[10vmin]" style={{ background: "var(--ss-accent, #f59e0b)" }} />
-        <h1 className="font-display font-black tracking-tight ss-text" style={{ fontSize: "11vmin" }} data-testid="bible-idle-title">
-          {idle?.title || "Welcome"}
-        </h1>
-        {idle?.subtitle && (
-          <p className="mt-[2vmin] ss-muted" style={{ fontSize: "3.6vmin" }} data-testid="bible-idle-subtitle">{idle.subtitle}</p>
-        )}
-      </div>
-    )}
+    {!idle?.image_url && <IdleWelcome idle={idle} appearance={appearance} churchName={churchName} logoUrl={logoUrl} />}
   </div>
 );
 
