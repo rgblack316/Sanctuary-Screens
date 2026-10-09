@@ -1,5 +1,6 @@
 from typing import Literal
 
+from bson import ObjectId
 from pydantic import BaseModel, Field
 
 from core import db
@@ -51,3 +52,14 @@ async def get_site() -> dict:
     logo = doc.get("logo_image_id")
     return {"church_name": doc.get("church_name", ""),
             "church_logo_url": f"/api/appearance/image/{logo}" if logo else None}
+
+
+async def release_image(image_id):
+    """Delete an image only if no display, saved look or logo still uses it."""
+    if not image_id:
+        return
+    in_use = (await db.display_appearance.find_one({"image_id": image_id}) or
+              await db.display_looks.find_one({"image_id": image_id}) or
+              await db.site_settings.find_one({"logo_image_id": image_id}))
+    if not in_use:
+        await db.display_images.delete_one({"_id": ObjectId(image_id)})

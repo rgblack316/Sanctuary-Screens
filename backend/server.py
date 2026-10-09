@@ -15,6 +15,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 import appearance_routes
 import bible_routes
+import looks_routes
 from core import (ADMIN_PIN, BIBLE_AUTH, JWT_ALG, JWT_SECRET, REGISTER_AUTH, SEED_DIR, SESSION_HOURS, SETTINGS_AUTH,
                   client, db, hub, now_iso)
 from importer import validate_csv
@@ -121,6 +122,7 @@ async def health():
 api.include_router(register_router)
 api.include_router(bible_routes.router)
 api.include_router(appearance_routes.router)
+api.include_router(looks_routes.router)
 app.include_router(api)
 
 STATE_FN = {"register": register_state, "bible": bible_routes.bible_state}

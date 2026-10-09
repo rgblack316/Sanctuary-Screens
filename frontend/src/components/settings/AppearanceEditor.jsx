@@ -11,6 +11,7 @@ import { DisplayPreview } from "@/components/settings/DisplayPreview";
 import { ChurchNamePanel } from "@/components/settings/ChurchNamePanel";
 import { TranslationLabelPanel } from "@/components/settings/TranslationLabelPanel";
 import { ReferencePanel } from "@/components/settings/ReferencePanel";
+import { LooksPanel } from "@/components/settings/LooksPanel";
 
 const COLOR_LABELS = {
   bible: { text_color: "Verse text", muted_color: "Secondary text", panel_color: "Text panel" },
@@ -80,6 +81,11 @@ export const AppearanceEditor = ({ display }) => {
   return (
     <div className="grid gap-8 lg:grid-cols-12" data-testid={`appearance-editor-${display}`}>
       <div className="space-y-6 lg:col-span-5">
+        <LooksPanel
+          display={display}
+          settings={Object.fromEntries(KEYS.map((k) => [k, form[k]]))}
+          onApplied={(data) => { setSaved(data.appearance); setForm(data.appearance); }}
+        />
         <ChurchNamePanel name={name} setName={setName} logoUrl={logoUrl} setLogoUrl={setLogoUrl} form={form} set={set} />
         {display === "bible" && <ReferencePanel form={form} set={set} />}
         {display === "bible" && <TranslationLabelPanel form={form} set={set} />}

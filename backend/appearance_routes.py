@@ -6,7 +6,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
-from appearance import DEFAULTS, AppearanceIn, get_appearance, get_site
+from appearance import DEFAULTS, AppearanceIn, get_appearance, get_site, release_image
 from bible_routes import bible_state
 from core import SETTINGS_AUTH, db, hub, now_iso
 from register_routes import register_state
@@ -98,8 +98,8 @@ async def read_appearance(display: Display):
 
 @router.put("/{display}", dependencies=[SETTINGS_AUTH])
 async def update_appearance(display: Display, body: AppearanceIn):
-    await db.display_appearance.update_one({"_id": display}, {"$set": {**body.model_dump(), "updated_at": now_iso()}},
-                                           upsert=True)
+    await db.display_appearance.update_one({"_id": display}, {"$set": {**body.model_dump(), "active_look_id": None,
+                                                                       "updated_at": now_iso()}}, upsert=True)
     await _broadcast(display)
     return await _result(display)
 
@@ -108,10 +108,9 @@ async def update_appearance(display: Display, body: AppearanceIn):
 async def upload_image(display: Display, file: UploadFile = File(...)):
     new_id = await _store_image(file, display)
     old = (await db.display_appearance.find_one({"_id": display}) or {}).get("image_id")
-    await db.display_appearance.update_one({"_id": display}, {"$set": {"image_id": new_id,
+    await db.display_appearance.update_one({"_id": display}, {"$set": {"image_id": new_id, "active_look_id": None,
                                                                        "updated_at": now_iso()}}, upsert=True)
-    if old:
-        await db.display_images.delete_one({"_id": ObjectId(old)})
+    await release_image(old)
     await _broadcast(display)
     return await _result(display)
 
@@ -120,7 +119,8 @@ async def upload_image(display: Display, file: UploadFile = File(...)):
 async def delete_image(display: Display):
     old = (await db.display_appearance.find_one({"_id": display}) or {}).get("image_id")
     if old:
-        await db.display_images.delete_one({"_id": ObjectId(old)})
-        await db.display_appearance.update_one({"_id": display}, {"$set": {"image_id": None, "updated_at": now_iso()}})
+        await db.display_appearance.update_one({"_id": display}, {"$set": {"image_id": None, "active_look_id": None,
+                                                                           "updated_at": now_iso()}})
+        await release_image(old)
         await _broadcast(display)
     return await _result(display)
