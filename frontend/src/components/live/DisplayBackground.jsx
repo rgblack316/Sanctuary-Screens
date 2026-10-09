@@ -41,18 +41,21 @@ export const DisplayBackground = ({ appearance: a }) => {
 };
 
 const ALIGN = { left: "left", center: "center", right: "right" };
+const JUSTIFY = { left: "flex-start", center: "center", right: "flex-end" };
 
-// Church name row; `place` is "top" or "bottom". `floating` pins it over centered layouts (idle slide).
-export const ChurchName = ({ name, appearance: a, place, floating = false }) => {
-  if (!a?.church_name_show || !name?.trim()) return null;
+// Church name + logo row; `place` is "top" or "bottom". `floating` pins it over centered layouts (idle slide).
+export const ChurchName = ({ name, logoUrl, appearance: a, place, floating = false }) => {
+  const logo = a?.church_logo_show && logoUrl ? logoUrl : null;
+  if (!a?.church_name_show || (!name?.trim() && !logo)) return null;
   const [vert, horiz] = a.church_name_position.split("-");
   if (vert !== place) return null;
   return (
     <div
       data-testid={`church-name-${place}`}
       data-position={a.church_name_position}
-      className={`font-display font-bold leading-tight ${floating ? "absolute left-[6vmin] right-[6vmin]" : ""}`}
+      className={`flex items-center gap-[2vmin] font-display font-bold leading-tight ${floating ? "absolute left-[6vmin] right-[6vmin]" : ""}`}
       style={{
+        justifyContent: JUSTIFY[horiz],
         textAlign: ALIGN[horiz],
         color: a.church_name_color,
         fontSize: `${1.6 + a.church_name_size * 0.55}vmin`,
@@ -61,7 +64,11 @@ export const ChurchName = ({ name, appearance: a, place, floating = false }) => 
         ...(floating ? { [place]: "4vmin", zIndex: 2 } : {}),
       }}
     >
-      {name}
+      {logo && (
+        <img src={assetUrl(logo)} alt="" data-testid={`church-logo-${place}`} className="shrink-0 object-contain"
+          style={{ height: `${2 + a.church_logo_size * 1.2}vmin`, maxWidth: "30vw" }} />
+      )}
+      {name?.trim() && <span>{name}</span>}
     </div>
   );
 };

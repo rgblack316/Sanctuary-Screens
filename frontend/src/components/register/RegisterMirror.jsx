@@ -28,7 +28,7 @@ export const RegisterMirror = ({ live }) => {
             <Cell label="Prev. offering" value={formatMoney(prev?.offering, c)} />
           </div>
           <p className="text-xs text-slate-500" data-testid="mirror-comparison-date">
-            Previous week = {formatDate(live.comparison_service_date)}{!prev && " (no record – shows N/A)"}
+            {live.comparison_overridden ? "Compared with" : "Previous week ="} {formatDate(live.comparison_service_date)}{live.comparison_overridden && " (chosen date)"}{!prev && " (no record – shows N/A)"}
           </p>
         </div>
       )}

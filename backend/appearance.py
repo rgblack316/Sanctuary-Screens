@@ -24,6 +24,8 @@ class AppearanceIn(BaseModel):
     church_name_size: int = Field(4, ge=1, le=10)
     church_name_color: str = Field("#F8FAFC", pattern=HEX)
     church_name_uppercase: bool = True
+    church_logo_show: bool = True
+    church_logo_size: int = Field(5, ge=1, le=10)
 
 
 DEFAULTS = {
@@ -40,5 +42,8 @@ async def get_appearance(display: str) -> dict:
     return {**a.model_dump(), "image_url": f"/api/appearance/image/{image_id}" if image_id else None}
 
 
-async def get_church_name() -> str:
-    return (await db.site_settings.find_one({"_id": "site"}) or {}).get("church_name", "")
+async def get_site() -> dict:
+    doc = await db.site_settings.find_one({"_id": "site"}) or {}
+    logo = doc.get("logo_image_id")
+    return {"church_name": doc.get("church_name", ""),
+            "church_logo_url": f"/api/appearance/image/{logo}" if logo else None}

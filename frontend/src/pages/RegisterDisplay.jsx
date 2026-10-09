@@ -29,6 +29,7 @@ export default function RegisterDisplay() {
   const data = preview?.sample ? { ...SAMPLE, currency: live?.currency ?? "$" } : live;
   const appearance = preview?.appearance || live?.appearance;
   const churchName = preview ? preview.church_name : live?.church_name;
+  const logoUrl = preview ? preview.church_logo_url : live?.church_logo_url;
   const cur = data?.current;
   const prev = data?.previous;
   const currency = data?.currency ?? "$";
@@ -37,7 +38,7 @@ export default function RegisterDisplay() {
   return (
     <div className="reg-screen" data-testid="register-display" style={appearanceVars(appearance)}>
       <DisplayBackground appearance={appearance} />
-      <ChurchName name={churchName} appearance={appearance} place="top" />
+      <ChurchName name={churchName} logoUrl={logoUrl} appearance={appearance} place="top" />
       <header className="flex items-center gap-4">
         <div className="min-w-0">
           <p className="reg-label font-display font-bold ss-text truncate" data-testid="register-service-label">
@@ -59,7 +60,7 @@ export default function RegisterDisplay() {
           <Metric testid="offering-previous-week" label="Offering" sub={prevSub} value={formatMoney(prev?.offering, currency)} />
         </div>
       )}
-      <ChurchName name={churchName} appearance={appearance} place="bottom" />
+      <ChurchName name={churchName} logoUrl={logoUrl} appearance={appearance} place="bottom" />
     </div>
   );
 }

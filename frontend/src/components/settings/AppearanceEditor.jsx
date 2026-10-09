@@ -16,7 +16,7 @@ const COLOR_LABELS = {
 };
 const KEYS = ["background_color", "text_color", "accent_color", "muted_color", "panel_color", "panel_opacity",
   "image_blur", "image_dim", "image_motion", "motion_speed", "church_name_show", "church_name_position",
-  "church_name_size", "church_name_color", "church_name_uppercase"];
+  "church_name_size", "church_name_color", "church_name_uppercase", "church_logo_show", "church_logo_size"];
 const same = (a, b) => a && b && KEYS.every((k) => a[k] === b[k]);
 
 const Toggle = ({ active, onClick, children, testid }) => (
@@ -35,6 +35,7 @@ export const AppearanceEditor = ({ display }) => {
   const [orientation, setOrientation] = useState("landscape");
   const [name, setName] = useState("");
   const [savedName, setSavedName] = useState("");
+  const [logoUrl, setLogoUrl] = useState(null);
   const labels = COLOR_LABELS[display];
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -42,7 +43,7 @@ export const AppearanceEditor = ({ display }) => {
     try {
       const { data } = await settingsApi.get(`/appearance/${display}`);
       setSaved(data.appearance); setForm(data.appearance); setDefaults(data.defaults);
-      setName(data.church_name); setSavedName(data.church_name);
+      setName(data.church_name); setSavedName(data.church_name); setLogoUrl(data.church_logo_url);
     } catch (e) {
       if (e.response?.status !== 401) toast.error(errMsg(e));
     }
@@ -71,12 +72,12 @@ export const AppearanceEditor = ({ display }) => {
     }
   };
 
-  const onImage = (a) => { setSaved((s) => ({ ...s, image_url: a.image_url })); setForm((f) => ({ ...f, image_url: a.image_url })); };
+  const onImage = (data) => { const a = data.appearance; setSaved((s) => ({ ...s, image_url: a.image_url })); setForm((f) => ({ ...f, image_url: a.image_url })); };
 
   return (
     <div className="grid gap-8 lg:grid-cols-12" data-testid={`appearance-editor-${display}`}>
       <div className="space-y-6 lg:col-span-5">
-        <ChurchNamePanel name={name} setName={setName} form={form} set={set} />
+        <ChurchNamePanel name={name} setName={setName} logoUrl={logoUrl} setLogoUrl={setLogoUrl} form={form} set={set} />
         <Panel title="Colors" testid="colors-panel">
           <div className="space-y-3">
             <ColorField label="Background" value={form.background_color} onChange={set("background_color")} testid="color-background" />
@@ -88,7 +89,7 @@ export const AppearanceEditor = ({ display }) => {
         </Panel>
         <Panel title="Background image" testid="background-panel">
           <div className="space-y-5">
-            <ImageField display={display} imageUrl={form.image_url} onChanged={onImage} />
+            <ImageField endpoint={`/appearance/${display}/image`} imageUrl={form.image_url} onChanged={onImage} />
             <RangeField label="Blur" value={form.image_blur} onChange={set("image_blur")} min={0} max={40} unit="px" testid="image-blur" disabled={!hasImage} />
             <RangeField label="Darken / tint" value={form.image_dim} onChange={set("image_dim")} min={0} max={95} unit="%" testid="image-dim" disabled={!hasImage} />
             <div className={hasImage ? "" : "opacity-40"}>
@@ -127,7 +128,7 @@ export const AppearanceEditor = ({ display }) => {
             </>
           }
         >
-          <DisplayPreview path={`/${display}`} appearance={form} churchName={name} sample={sample} orientation={orientation} />
+          <DisplayPreview path={`/${display}`} appearance={form} churchName={name} logoUrl={logoUrl} sample={sample} orientation={orientation} />
         </Panel>
       </div>
     </div>

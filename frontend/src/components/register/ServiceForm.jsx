@@ -4,7 +4,8 @@ import { Loader2, Send } from "lucide-react";
 import { Panel } from "@/components/AdminShell";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { errMsg, formatDate, registerApi, todayLocal } from "@/lib/api";
+import { errMsg, registerApi, todayLocal } from "@/lib/api";
+import { CompareSelector, minusSeven } from "@/components/register/CompareSelector";
 
 const INT_RE = /^\d*$/;
 const MONEY_RE = /^\d*(\.\d{0,2})?$/;
@@ -31,6 +32,8 @@ export const ServiceForm = ({ services, live, editing, onSaved }) => {
   const [attendance, setAttendance] = useState("");
   const [offering, setOffering] = useState("");
   const [busy, setBusy] = useState(false);
+  const [compareMode, setCompareMode] = useState("auto");
+  const [compareDate, setCompareDate] = useState("");
 
   const existing = useMemo(() => services.find((s) => s.service_date === date), [services, date]);
 
@@ -38,19 +41,26 @@ export const ServiceForm = ({ services, live, editing, onSaved }) => {
     setLabel(s.service_label || "");
     setAttendance(s.attendance == null ? "" : String(s.attendance));
     setOffering(s.offering == null ? "" : Number(s.offering).toFixed(2));
+    setCompareMode(s.comparison_overridden ? "custom" : "auto");
+    setCompareDate(s.comparison_overridden ? s.comparison_service_date : "");
   };
 
   useEffect(() => { if (editing) { setDate(editing.service_date); fill(editing); } }, [editing]);
-  useEffect(() => { if (existing) fill(existing); }, [existing?.service_date]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (existing) fill(existing);
+    else { setCompareMode("auto"); setCompareDate(""); }
+  }, [existing?.service_date]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const attOk = INT_RE.test(attendance);
   const offOk = MONEY_RE.test(offering);
-  const valid = date && attOk && offOk;
+  const compareOk = compareMode === "auto" || (compareDate && compareDate < date);
+  const valid = date && attOk && offOk && compareOk;
+  const effectiveCompare = compareMode === "custom" ? compareDate : minusSeven(date);
 
   const cur = live?.current;
   const isLive = cur && cur.service_date === date && String(cur.attendance ?? "") === attendance &&
     (cur.offering == null ? "" : Number(cur.offering).toFixed(2)) === (offering === "" ? "" : Number(offering).toFixed(2)) &&
-    (cur.service_label || "") === label.trim();
+    (cur.service_label || "") === label.trim() && live.comparison_service_date === effectiveCompare;
 
   const submit = async (e) => {
     e.preventDefault();
@@ -61,6 +71,7 @@ export const ServiceForm = ({ services, live, editing, onSaved }) => {
         service_label: label,
         attendance: attendance === "" ? null : parseInt(attendance, 10),
         offering: offering === "" ? null : parseFloat(offering),
+        comparison_service_date: compareMode === "custom" ? compareDate : null,
         make_active: true,
       });
       toast.success("Published to /register");
@@ -90,13 +101,13 @@ export const ServiceForm = ({ services, live, editing, onSaved }) => {
           <label className="block">
             <span className="label-caps">Service date</span>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} data-testid="service-date-input" className="mt-2 h-11 bg-[#0B0E14]" />
-            <span className="mt-1 block text-xs text-slate-500">Compares with {date ? formatDate(new Date(new Date(`${date}T12:00:00`).getTime() - 7 * 864e5).toLocaleDateString("en-CA")) : "—"}</span>
           </label>
           <label className="block">
             <span className="label-caps">Label</span>
             <Input value={label} maxLength={80} onChange={(e) => setLabel(e.target.value)} data-testid="service-label-input" className="mt-2 h-11 bg-[#0B0E14]" />
           </label>
         </div>
+        <CompareSelector date={date} services={services} mode={compareMode} setMode={setCompareMode} compareDate={compareDate} setCompareDate={setCompareDate} />
         <div className="grid gap-6 sm:grid-cols-2">
           <div>
             <span className="label-caps">Attendance</span>

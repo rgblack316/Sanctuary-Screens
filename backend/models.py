@@ -27,6 +27,7 @@ class Service(BaseDocument):
     attendance: Optional[int] = None
     offering: Optional[float] = None
     comparison_service_date: str
+    comparison_overridden: bool = False
     updated_at: str
 
 

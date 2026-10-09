@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from appearance import get_appearance, get_church_name
+from appearance import get_appearance, get_site
 from core import CURRENCY, REGISTER_AUTH, db, hub, now_iso
 from models import Service
 
@@ -22,6 +22,7 @@ class ServiceIn(BaseModel):
     service_label: str = Field("", max_length=80)
     attendance: Optional[int] = Field(None, ge=0, le=1_000_000)
     offering: Optional[float] = Field(None, ge=0, le=1_000_000_000)
+    comparison_service_date: Optional[str] = None
     make_active: bool = True
 
 
@@ -37,16 +38,17 @@ async def register_state() -> dict:
     if not cur:
         cur = await db.register_services.find_one(sort=[("service_date", -1)])
     appearance = await get_appearance("register")
-    church_name = await get_church_name()
+    site = await get_site()
     if not cur:
         return {"currency": CURRENCY, "current": None, "previous": None, "comparison_service_date": None,
-                "appearance": appearance, "church_name": church_name}
+                "appearance": appearance, **site}
     current = Service.from_mongo(cur)
-    comp = (date.fromisoformat(current.service_date) - timedelta(days=7)).isoformat()
+    comp = current.comparison_service_date
     prev = Service.from_mongo(await db.register_services.find_one({"service_date": comp}))
     return {"currency": CURRENCY, "current": current.model_dump(),
             "previous": prev.model_dump() if prev else None, "comparison_service_date": comp,
-            "appearance": appearance, "church_name": church_name}
+            "comparison_overridden": current.comparison_overridden,
+            "appearance": appearance, **site}
 
 
 @router.get("/display")
@@ -65,10 +67,18 @@ async def list_services():
 @router.put("/services/{service_date}", dependencies=[REGISTER_AUTH])
 async def upsert_service(service_date: str, body: ServiceIn):
     d = parse_date(service_date)
+    comp, overridden = (d - timedelta(days=7)).isoformat(), False
+    if body.comparison_service_date:
+        c = parse_date(body.comparison_service_date)
+        if c >= d:
+            raise HTTPException(422, "The comparison date must be before the service date.")
+        if not await db.register_services.find_one({"service_date": c.isoformat()}):
+            raise HTTPException(422, f"No service record exists for {c.isoformat()}.")
+        comp, overridden = c.isoformat(), True
     svc = Service(service_date=d.isoformat(), service_label=body.service_label.strip(),
                   attendance=body.attendance,
                   offering=round(body.offering, 2) if body.offering is not None else None,
-                  comparison_service_date=(d - timedelta(days=7)).isoformat(), updated_at=now_iso())
+                  comparison_service_date=comp, comparison_overridden=overridden, updated_at=now_iso())
     await db.register_services.update_one({"service_date": svc.service_date},
                                           {"$set": svc.to_mongo()}, upsert=True)
     if body.make_active:
