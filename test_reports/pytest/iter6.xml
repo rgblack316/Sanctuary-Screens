@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="5" skipped="0" tests="6" time="1.196" timestamp="2026-10-09T15:59:39.415072+00:00" hostname="agent-env-a16f0c79-b092-40ae-8a42-20e76b49650b"><testcase classname="tests.test_iter6_translation" name="test_defaults_present" time="0.677"><failure message="KeyError: 'appearance'">backend/tests/test_iter6_translation.py:36: in test_defaults_present
+    a = bible["appearance"]
+        ^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'appearance'</failure></testcase><testcase classname="tests.test_iter6_translation" name="test_put_valid_translation" time="0.000"><failure message="KeyError: 'appearance'">backend/tests/test_iter6_translation.py:52: in test_put_valid_translation
+    body = {k: v for k, v in bible["appearance"].items() if k != "image_url"}
+                             ^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'appearance'</failure></testcase><testcase classname="tests.test_iter6_translation" name="test_put_invalid_position_422" time="0.000"><failure message="KeyError: 'appearance'">backend/tests/test_iter6_translation.py:69: in test_put_invalid_position_422
+    body = {k: v for k, v in bible["appearance"].items() if k != "image_url"}
+                             ^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'appearance'</failure></testcase><testcase classname="tests.test_iter6_translation" name="test_put_invalid_show_type_422" time="0.000"><failure message="KeyError: 'appearance'">backend/tests/test_iter6_translation.py:77: in test_put_invalid_show_type_422
+    body = {k: v for k, v in bible["appearance"].items() if k != "image_url"}
+                             ^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'appearance'</failure></testcase><testcase classname="tests.test_iter6_translation" name="test_register_appearance_also_has_translation_keys" time="0.000"><failure message="KeyError: 'appearance'">backend/tests/test_iter6_translation.py:86: in test_register_appearance_also_has_translation_keys
+    assert "translation_show" in reg["appearance"]
+                                 ^^^^^^^^^^^^^^^^^
+E   KeyError: 'appearance'</failure></testcase><testcase classname="tests.test_iter6_translation" name="test_register_appearance_also_has_translation_keys" time="0.000"><error message="failed on teardown with &quot;KeyError: 'appearance'&quot;">backend/tests/test_iter6_translation.py:28: in saved_state
+    body = {k: v for k, v in snap["appearance"].items() if k != "image_url"}
+                             ^^^^^^^^^^^^^^^^^^
+E   KeyError: 'appearance'</error></testcase></testsuite></testsuites>

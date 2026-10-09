@@ -49,6 +49,10 @@ See original problem statement; acceptance criteria listed there.
 - Removed accent line from idle welcome
 - Renamed .env.example -> env.template (dot-files don't sync to GitHub from Emergent); install.sh/upgrade.sh/common.sh/README updated
 
+## Implemented (2026-10-09, iteration 7)
+- Bible slides: reference now above verse text (shrinks together); translation label position (6 spots) + show/hide toggle in Display Settings (Bible tab); slide counter bottom-right
+- Testing: iteration_6 passed. Incident: older regression tests' teardown deleted the user's church name, logo and background image in the preview DB; destructive test files removed, user must re-upload.
+
 ## Backlog
 - P1: Run install.sh on the real NUC and verify host networking, reboot persistence, offline use
 - P1: Final idle slide design asset
