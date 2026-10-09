@@ -93,6 +93,14 @@ A translation can't be deleted while it is on the live display or if it is the l
 
 Displays reconnect automatically after a backend restart or network blip and re-sync the current state.
 
+## Backups
+
+`/settings-admin` → **Backups** tab:
+- **Back up now** and a weekly automatic backup (choose day, time and how many to keep). Backups are gzip files in the `backups/` folder of the install (mounted into the backend), containing register records, translations, prepared scripture, display settings, looks and images (not the PIN).
+- Download, delete or restore any backup, or restore from an uploaded backup file (restore replaces current data – confirm required).
+- Optional email of each backup using your own SMTP account (e.g. Gmail: `smtp.gmail.com`, port 587, STARTTLS, Google app password). Use **Send test email** to check. Email needs internet on the NUC; local backups do not.
+- The schedule uses the NUC's local time (`/etc/localtime` is mounted into the backend).
+
 ## Useful commands
 
 ```bash

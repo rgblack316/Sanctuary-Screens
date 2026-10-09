@@ -69,6 +69,22 @@ async def list_dates():
     return {"dates": sorted(await db.register_services.distinct("service_date"))}
 
 
+@router.delete("/services/{service_date}", dependencies=[REGISTER_AUTH])
+async def delete_service(service_date: str):
+    d = parse_date(service_date).isoformat()
+    res = await db.register_services.delete_one({"service_date": d})
+    if not res.deleted_count:
+        raise HTTPException(404, f"No service record for {d}")
+    await db.register_state.update_one({"_id": "state", "active_service_date": d}, {"$set": {"active_service_date": None}})
+    async for s in db.register_services.find({"comparison_overridden": True, "comparison_service_date": d}):
+        auto = (date.fromisoformat(s["service_date"]) - timedelta(days=7)).isoformat()
+        await db.register_services.update_one({"_id": s["_id"]}, {"$set": {"comparison_service_date": auto,
+                                                                         "comparison_overridden": False}})
+    state = await register_state()
+    await hub.broadcast("register", state)
+    return {"deleted": d, "state": state}
+
+
 @router.put("/services/{service_date}", dependencies=[REGISTER_AUTH])
 async def upsert_service(service_date: str, body: ServiceIn):
     d = parse_date(service_date)

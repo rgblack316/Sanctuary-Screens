@@ -31,8 +31,11 @@ services:
       BACKEND_PORT: ${BACKEND_PORT:-8092}
       BACKEND_BIND: ${BACKEND_BIND:-127.0.0.1}
       IDLE_ASSET_DIR: /app/data/idle
+      BACKUP_DIR: /app/backups
     volumes:
       - ./data/idle:/app/data/idle:ro
+      - ./backups:/app/backups
+      - /etc/localtime:/etc/localtime:ro
     depends_on:
       mongodb:
         condition: service_healthy

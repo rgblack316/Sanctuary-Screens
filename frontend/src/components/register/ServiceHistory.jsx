@@ -1,7 +1,7 @@
 import { Panel } from "@/components/AdminShell";
 import { formatCount, formatDate, formatMoney } from "@/lib/api";
 
-export const ServiceHistory = ({ services, activeDate, onEdit, onActivate }) => (
+export const ServiceHistory = ({ services, activeDate, onEdit, onActivate, onDelete }) => (
   <Panel title="Recent services" testid="service-history">
     {services.length === 0 ? (
       <p className="text-sm text-slate-500">No services recorded yet.</p>
@@ -31,6 +31,7 @@ export const ServiceHistory = ({ services, activeDate, onEdit, onActivate }) => 
                   ) : (
                     <button onClick={() => onActivate(s.service_date)} data-testid={`history-show-${s.service_date}`} className="rounded-md border border-[#2A3550] px-2 py-1 text-xs font-semibold text-amber-300 hover:border-amber-500/60">Show</button>
                   )}
+                  <button onClick={() => onDelete(s)} data-testid={`history-delete-${s.service_date}`} className="ml-2 rounded-md px-2 py-1 text-xs font-semibold text-rose-300 hover:bg-rose-500/10">Delete</button>
                 </td>
               </tr>
             ))}

@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
 
 import appearance_routes
+import backup
 import bible_routes
 import looks_routes
 from core import (ADMIN_PIN, BIBLE_AUTH, JWT_ALG, JWT_SECRET, REGISTER_AUTH, SEED_DIR, SESSION_HOURS, SETTINGS_AUTH,
@@ -123,6 +124,7 @@ api.include_router(register_router)
 api.include_router(bible_routes.router)
 api.include_router(appearance_routes.router)
 api.include_router(looks_routes.router)
+api.include_router(backup.router)
 app.include_router(api)
 
 STATE_FN = {"register": register_state, "bible": bible_routes.bible_state}
@@ -222,6 +224,7 @@ async def startup():
     await run_migrations()
     await ensure_pin()
     asyncio.create_task(seed_translations())
+    asyncio.create_task(backup.scheduler_loop())
 
 
 @app.on_event("shutdown")

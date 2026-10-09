@@ -4,6 +4,8 @@ import { PinGate } from "@/components/live/PinGate";
 import { AdminShell } from "@/components/AdminShell";
 import { AppearanceEditor } from "@/components/settings/AppearanceEditor";
 import { PinChangeForm } from "@/components/settings/PinChangeForm";
+import { BackupSettingsForm } from "@/components/settings/BackupSettingsForm";
+import { BackupList } from "@/components/settings/BackupList";
 
 function SettingsConsole() {
   const [tab, setTab] = useState("bible");
@@ -14,10 +16,14 @@ function SettingsConsole() {
           <TabsTrigger value="bible" data-testid="settings-tab-bible">Bible display</TabsTrigger>
           <TabsTrigger value="register" data-testid="settings-tab-register">Register display</TabsTrigger>
           <TabsTrigger value="security" data-testid="settings-tab-security">Admin PIN</TabsTrigger>
+          <TabsTrigger value="backup" data-testid="settings-tab-backup">Backups</TabsTrigger>
         </TabsList>
         <TabsContent value="bible"><AppearanceEditor display="bible" /></TabsContent>
         <TabsContent value="register"><AppearanceEditor display="register" /></TabsContent>
         <TabsContent value="security"><PinChangeForm /></TabsContent>
+        <TabsContent value="backup">
+          <div className="grid gap-8 lg:grid-cols-2"><BackupList /><BackupSettingsForm /></div>
+        </TabsContent>
       </Tabs>
     </AdminShell>
   );

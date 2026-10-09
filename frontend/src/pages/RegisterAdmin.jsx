@@ -7,12 +7,14 @@ import { errMsg, registerApi } from "@/lib/api";
 import { ServiceForm } from "@/components/register/ServiceForm";
 import { ServiceHistory } from "@/components/register/ServiceHistory";
 import { RegisterMirror } from "@/components/register/RegisterMirror";
+import { DeleteServiceDialog } from "@/components/register/DeleteServiceDialog";
 
 function RegisterConsole() {
   const { data: live, status } = useLiveChannel("register");
   const [history, setHistory] = useState({ services: [], active_service_date: null });
   const [editing, setEditing] = useState(null);
   const [markedDates, setMarkedDates] = useState([]);
+  const [toDelete, setToDelete] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -38,6 +40,18 @@ function RegisterConsole() {
     }
   };
 
+  const removeService = async () => {
+    try {
+      await registerApi.delete(`/register/services/${toDelete.service_date}`);
+      toast.success("Service record deleted");
+      load();
+    } catch (e) {
+      toast.error(errMsg(e));
+    } finally {
+      setToDelete(null);
+    }
+  };
+
   return (
     <AdminShell area="register" title="Register Admin" status={status} displayPath="/register">
       <div className="grid gap-8 lg:grid-cols-12">
@@ -53,7 +67,9 @@ function RegisterConsole() {
         activeDate={live?.current?.service_date}
         onEdit={setEditing}
         onActivate={makeActive}
+        onDelete={setToDelete}
       />
+      <DeleteServiceDialog service={toDelete} currency={live?.currency ?? "$"} onCancel={() => setToDelete(null)} onConfirm={removeService} />
     </AdminShell>
   );
 }

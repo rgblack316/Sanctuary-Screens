@@ -33,6 +33,7 @@ dist
 # Environment files (comprehensive coverage)
 /.env
 /backups/
+/backend/backups/
 /data/idle/*
 !/data/idle/.gitkeep
 
