@@ -364,6 +364,11 @@ class MoveIn(BaseModel):
     direction: Literal["up", "down"]
 
 
+@router.get("/prepared-dates", dependencies=[BIBLE_AUTH])
+async def list_prepared_dates():
+    return {"dates": sorted(await db.bible_prepared.distinct("service_date"))}
+
+
 @router.get("/prepared", dependencies=[BIBLE_AUTH])
 async def list_prepared(service_date: str):
     docs = await db.bible_prepared.find({"service_date": service_date}).sort("sort_order", 1).to_list(None)

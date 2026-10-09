@@ -21,11 +21,16 @@ export const PreparedList = ({ translations, defaultCode, onLoad }) => {
   const [date, setDate] = useState(todayLocal());
   const [items, setItems] = useState([]);
   const [dialog, setDialog] = useState(null);
+  const [markedDates, setMarkedDates] = useState([]);
 
   const load = useCallback(async () => {
     try {
-      const { data } = await bibleApi.get("/bible/prepared", { params: { service_date: date } });
+      const [{ data }, { data: d }] = await Promise.all([
+        bibleApi.get("/bible/prepared", { params: { service_date: date } }),
+        bibleApi.get("/bible/prepared-dates"),
+      ]);
       setItems(data.items);
+      setMarkedDates(d.dates);
     } catch (e) {
       if (e.response?.status !== 401) toast.error(errMsg(e));
     }
@@ -73,7 +78,7 @@ export const PreparedList = ({ translations, defaultCode, onLoad }) => {
     >
       <div className="block">
         <span className="label-caps">Service date</span>
-        <DatePicker value={date} onChange={setDate} testid="prepared-date" />
+        <DatePicker value={date} onChange={setDate} testid="prepared-date" markedDates={markedDates} markLabel="Has prepared scripture" />
       </div>
       <ol className="mt-4 space-y-2" data-testid="prepared-list">
         {items.length === 0 && <li className="text-sm text-slate-500" data-testid="prepared-empty">No scriptures prepared for this date.</li>}

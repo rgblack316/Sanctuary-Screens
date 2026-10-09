@@ -44,6 +44,11 @@
 .font-display { font-family: "Outfit", system-ui, sans-serif; }
 .font-mono-ui { font-family: "JetBrains Mono", monospace; }
 .label-caps { @apply text-xs uppercase tracking-[0.18em] font-semibold text-slate-400; }
+.ss-recorded { position: relative; }
+.ss-recorded::after {
+    content: ""; position: absolute; bottom: 3px; left: 50%; width: 5px; height: 5px;
+    margin-left: -2.5px; border-radius: 9999px; background: #10b981;
+}
 
 /* ---------- customizable display theme (vars set from saved appearance) ---------- */
 .ss-accent { color: var(--ss-accent, #f59e0b); }

@@ -9,8 +9,9 @@ const toDate = (iso) => (iso ? new Date(`${iso}T12:00:00`) : undefined);
 const toIso = (d) => d.toLocaleDateString("en-CA");
 
 // Typed date input with a mouse-friendly calendar popover beside it.
-export const DatePicker = ({ value, onChange, testid }) => {
+export const DatePicker = ({ value, onChange, testid, markedDates = [], markLabel }) => {
   const [open, setOpen] = useState(false);
+  const marked = markedDates.map(toDate);
   return (
     <div className="mt-2 flex gap-2">
       <Input type="date" value={value} onChange={(e) => onChange(e.target.value)} data-testid={`${testid}-input`} className="h-10 flex-1 bg-[#0B0E14]" />
@@ -31,14 +32,21 @@ export const DatePicker = ({ value, onChange, testid }) => {
             selected={toDate(value)}
             defaultMonth={toDate(value)}
             onSelect={(d) => { if (d) { onChange(toIso(d)); setOpen(false); } }}
+            modifiers={{ recorded: marked }}
+            modifiersClassNames={{ recorded: "ss-recorded" }}
             initialFocus
           />
-          <div className="border-t border-[#222B3E] p-2 text-right">
+          <div className="flex items-center gap-3 border-t border-[#222B3E] p-2">
+            {markLabel && (
+              <span className="flex items-center gap-1.5 pl-1 text-xs text-slate-400" data-testid={`${testid}-legend`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {markLabel}
+              </span>
+            )}
             <button
               type="button"
               onClick={() => { onChange(todayLocal()); setOpen(false); }}
               data-testid={`${testid}-today-btn`}
-              className="rounded-md px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-[#1A202C]"
+              className="ml-auto rounded-md px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-[#1A202C]"
             >
               Today
             </button>

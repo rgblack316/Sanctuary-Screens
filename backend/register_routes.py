@@ -64,6 +64,11 @@ async def list_services():
             "active_service_date": meta.get("active_service_date")}
 
 
+@router.get("/dates", dependencies=[REGISTER_AUTH])
+async def list_dates():
+    return {"dates": sorted(await db.register_services.distinct("service_date"))}
+
+
 @router.put("/services/{service_date}", dependencies=[REGISTER_AUTH])
 async def upsert_service(service_date: str, body: ServiceIn):
     d = parse_date(service_date)

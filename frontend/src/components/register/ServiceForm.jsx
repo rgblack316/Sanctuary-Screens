@@ -27,7 +27,7 @@ const Quick = ({ items, onAdd, prefix, testid }) => (
   </div>
 );
 
-export const ServiceForm = ({ services, live, editing, onSaved }) => {
+export const ServiceForm = ({ services, markedDates, live, editing, onSaved }) => {
   const [date, setDate] = useState(todayLocal());
   const [label, setLabel] = useState("Sunday Service");
   const [attendance, setAttendance] = useState("");
@@ -101,7 +101,7 @@ export const ServiceForm = ({ services, live, editing, onSaved }) => {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="block">
             <span className="label-caps">Service date</span>
-            <DatePicker value={date} onChange={setDate} testid="service-date" />
+            <DatePicker value={date} onChange={setDate} testid="service-date" markedDates={markedDates} markLabel="Has a saved service" />
           </div>
           <label className="block">
             <span className="label-caps">Label</span>

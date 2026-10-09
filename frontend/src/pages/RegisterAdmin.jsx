@@ -12,11 +12,16 @@ function RegisterConsole() {
   const { data: live, status } = useLiveChannel("register");
   const [history, setHistory] = useState({ services: [], active_service_date: null });
   const [editing, setEditing] = useState(null);
+  const [markedDates, setMarkedDates] = useState([]);
 
   const load = useCallback(async () => {
     try {
-      const { data } = await registerApi.get("/register/services");
+      const [{ data }, { data: d }] = await Promise.all([
+        registerApi.get("/register/services"),
+        registerApi.get("/register/dates"),
+      ]);
       setHistory(data);
+      setMarkedDates(d.dates);
     } catch (e) {
       if (e.response?.status !== 401) toast.error(errMsg(e));
     }
@@ -37,7 +42,7 @@ function RegisterConsole() {
     <AdminShell area="register" title="Register Admin" status={status} displayPath="/register">
       <div className="grid gap-8 lg:grid-cols-12">
         <div className="lg:col-span-7">
-          <ServiceForm services={history.services} live={live} editing={editing} onSaved={load} />
+          <ServiceForm services={history.services} markedDates={markedDates} live={live} editing={editing} onSaved={load} />
         </div>
         <div className="lg:col-span-5">
           <RegisterMirror live={live} />
