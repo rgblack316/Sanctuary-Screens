@@ -68,6 +68,8 @@ See original problem statement; acceptance criteria listed there.
 ## Implemented (2026-10-09, iteration 11)
 - Prepared scripture service date: calendar popover button (plus "Today") beside the typed date input (components/DatePicker.jsx)
 - Register Admin service date: same calendar picker (DatePicker, testid service-date-*)
+- Calendars mark recorded dates (green dot): GET /api/register/dates, GET /api/bible/prepared-dates; legend in popover
+- Testing: iteration_10 passed (read-only)
 
 ## Backlog
 - P1: Run install.sh on the real NUC and verify host networking, reboot persistence, offline use

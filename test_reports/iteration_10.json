@@ -1,0 +1,19 @@
+{
+  "summary": "Verified Recorded Dates Marked feature end-to-end. Backend: GET /api/register/dates returns {dates:[2026-09-27,2026-10-04,2026-10-09]}, GET /api/bible/prepared-dates returns {dates:[2026-10-09,2026-10-11]}, both return 401 without token. Frontend: /register-admin service-date-calendar shows green ss-recorded dots on Oct 4, Oct 9 (and Sep 27 overflow); navigating to September shows Sep 27 marked; legend 'Has a saved service' present; Today button resets date. /bible-admin prepared-date-calendar shows dots on Oct 9 and Oct 11 with legend 'Has prepared scripture'. Read-only test: no data created/edited/deleted; Genesis 1 remained on bible display throughout.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "DatePicker toDate uses `new Date(ISO + T12:00:00)` which treats the YYYY-MM-DD as local time - matches react-day-picker modifiers correctly. OK.",
+    "Both /dates endpoints use distinct() and sorted() in Python - correct and cheap."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "Admin PIN 1234",
+  "seed_data_creation": "None - read-only test",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Feature 'Recorded Dates Marked' fully working. Register has saved services on 2026-09-27, 2026-10-04, 2026-10-09. Bible prepared items on 2026-10-09 and 2026-10-11. Bible display is LIVE on Genesis 1 - do not clear.",
+  "rca of the issue": "N/A - feature works as specified"
+}
