@@ -4,7 +4,7 @@ import { ArrowDown, ArrowUp, MonitorUp, Pencil, Plus, Trash2 } from "lucide-reac
 import { Panel } from "@/components/AdminShell";
 import { Button } from "@/components/ui/button";
 import { bibleApi, errMsg } from "@/lib/api";
-import { draftFromPrepared, publishDraft } from "@/lib/bible";
+import { draftFromPrepared, itemDetail, publishDraft } from "@/lib/bible";
 import { PreparedDialog } from "@/components/bible/PreparedDialog";
 import { DatePicker } from "@/components/DatePicker";
 
@@ -16,13 +16,6 @@ const IconBtn = ({ onClick, label, testid, children, danger }) => (
     {children}
   </button>
 );
-
-const itemDetail = (it, defaultCode) => {
-  if (it.kind === "custom") return "custom slide";
-  if (it.preloaded_text_optional) return "manual text";
-  const code = it.translation_code || `default (${defaultCode})`;
-  return it.reference_only ? `reference only · ${code}` : code;
-};
 
 export const PreparedList = ({ translations, defaultCode, onLoad, date, setDate, tick }) => {
   const [items, setItems] = useState([]);

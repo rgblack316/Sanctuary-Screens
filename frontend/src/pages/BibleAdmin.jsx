@@ -7,6 +7,7 @@ import { bibleApi, errMsg, todayLocal } from "@/lib/api";
 import { LiveControl } from "@/components/bible/LiveControl";
 import { Composer } from "@/components/bible/Composer";
 import { PreparedList } from "@/components/bible/PreparedList";
+import { SlideLibrary } from "@/components/bible/SlideLibrary";
 import { TranslationManager } from "@/components/bible/TranslationManager";
 
 function BibleConsole() {
@@ -16,6 +17,8 @@ function BibleConsole() {
   const [draft, setDraft] = useState(null);
   const [date, setDate] = useState(todayLocal());
   const [preparedTick, setPreparedTick] = useState(0);
+  const [libraryTick, setLibraryTick] = useState(0);
+  const bumpPrepared = () => setPreparedTick((t) => t + 1);
 
   const loadTranslations = useCallback(async () => {
     try {
@@ -33,12 +36,13 @@ function BibleConsole() {
     <AdminShell area="bible" title="Bible Admin" status={status} displayPath="/bible">
       <LiveControl live={live} translations={translations} />
       <div className="grid gap-8 lg:grid-cols-12">
-        <div className="lg:col-span-5">
+        <div className="space-y-8 lg:col-span-5">
           <PreparedList translations={translations} defaultCode={defaultCode} onLoad={setDraft} date={date} setDate={setDate} tick={preparedTick} />
+          <SlideLibrary defaultCode={defaultCode} onLoad={setDraft} date={date} tick={libraryTick} onPrepared={bumpPrepared} />
         </div>
         <div className="lg:col-span-7">
           <Composer translations={translations} defaultCode={defaultCode} draft={draft} setDraft={setDraft}
-            serviceDate={date} onPrepared={() => setPreparedTick((t) => t + 1)} />
+            serviceDate={date} onPrepared={bumpPrepared} onLibrary={() => setLibraryTick((t) => t + 1)} />
         </div>
       </div>
       <TranslationManager translations={translations} defaultCode={defaultCode} reload={loadTranslations} />

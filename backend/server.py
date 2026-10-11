@@ -16,6 +16,7 @@ from starlette.middleware.cors import CORSMiddleware
 import appearance_routes
 import backup
 import bible_routes
+import library_routes
 import looks_routes
 from core import (ADMIN_PIN, BIBLE_AUTH, JWT_ALG, JWT_SECRET, REGISTER_AUTH, SEED_DIR, SESSION_HOURS, SETTINGS_AUTH,
                   client, db, hub, now_iso)
@@ -122,6 +123,7 @@ async def health():
 
 api.include_router(register_router)
 api.include_router(bible_routes.router)
+api.include_router(library_routes.router)
 api.include_router(appearance_routes.router)
 api.include_router(looks_routes.router)
 api.include_router(backup.router)

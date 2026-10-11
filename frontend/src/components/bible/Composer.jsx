@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { AlertTriangle, ListPlus, Loader2, MonitorUp, Search } from "lucide-react";
+import { AlertTriangle, BookmarkPlus, ListPlus, Loader2, MonitorUp, Search } from "lucide-react";
 import { Panel } from "@/components/AdminShell";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { bibleApi, errMsg } from "@/lib/api";
 import { lookupDraft, manualDraft, preparedFromDraft, publishDraft, referenceOnlyDraft } from "@/lib/bible";
 import { CustomSlideForm } from "@/components/bible/CustomSlideForm";
+import { HymnForm } from "@/components/bible/HymnForm";
 import { TranslationSelect } from "@/components/bible/TranslationSelect";
 import { SlidePreview } from "@/components/bible/SlidePreview";
 
 const KIND_LABEL = { manual: "manual", custom: "custom slide", reference_only: "reference only" };
 
-export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDate, onPrepared }) => {
+export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDate, onPrepared, onLibrary }) => {
   const [refOnly, setRefOnly] = useState(false);
   const [tab, setTab] = useState("lookup");
   const [reference, setReference] = useState("");
@@ -59,6 +60,17 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
       await bibleApi.post("/bible/prepared", preparedFromDraft(draft, serviceDate));
       toast.success(`Added to prepared list for ${serviceDate}`);
       onPrepared();
+    } catch (err) {
+      toast.error(errMsg(err));
+    }
+  };
+
+  const saveLibrary = async () => {
+    const { service_date, title_or_note, ...item } = preparedFromDraft(draft, serviceDate);
+    try {
+      await bibleApi.post("/bible/library", { ...item, name: draft.normalized_reference });
+      toast.success(`${draft.normalized_reference} saved to the slide library`);
+      onLibrary();
     } catch (err) {
       toast.error(errMsg(err));
     }
@@ -114,7 +126,8 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
           <Textarea value={manualText} onChange={(e) => setManualText(e.target.value)} rows={6} placeholder="Paste or type the text. Leave a blank line between slides." data-testid="manual-text-input" className="bg-[#0B0E14]" />
           <Button variant="secondary" onClick={buildManual} data-testid="manual-build-btn">Build slides</Button>
         </TabsContent>
-        <TabsContent value="custom">
+        <TabsContent value="custom" className="space-y-5">
+          <HymnForm setDraft={setDraft} />
           <CustomSlideForm setDraft={setDraft} />
         </TabsContent>
       </Tabs>
@@ -126,7 +139,10 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
             <span className="text-xs text-slate-500" data-testid="draft-slide-count">
               {draft.verses.length} slide{draft.verses.length === 1 ? "" : "s"} · {[KIND_LABEL[draft.source_type], draft.translation_code].filter(Boolean).join(" · ")}
             </span>
-            <Button variant="outline" onClick={savePrepared} data-testid="save-to-prepared-btn" className="ml-auto h-11">
+            <Button variant="outline" onClick={saveLibrary} data-testid="save-to-library-btn" className="ml-auto h-11">
+              <BookmarkPlus size={16} /> Save to library
+            </Button>
+            <Button variant="outline" onClick={savePrepared} data-testid="save-to-prepared-btn" className="h-11">
               <ListPlus size={16} /> Save to prepared list
             </Button>
             <Button onClick={publish} disabled={busy} data-testid="publish-passage-btn" className="h-11 px-5 font-semibold">

@@ -6,9 +6,9 @@ Local church display system for the Intel NUC. Two independent live displays on 
 |---|---|
 | `/register` | Attendance & offering display (this week + exactly 7 days earlier) |
 | `/register-admin` | PIN-protected entry of service numbers |
-| `/bible` | Scripture display – one verse per slide, idle slide when nothing is live |
-| `/bible-admin` | PIN-protected scripture control, prepared list, translation import/delete |
-| `/settings-admin` | PIN-protected display appearance (background image, blur, parallax drift, colors) and admin PIN change |
+| `/bible` | Scripture display – one verse per slide; also reference-only slides and custom slides (hymns, announcements); idle slide when nothing is live |
+| `/bible-admin` | PIN-protected scripture/custom slide control, prepared list per service date, slide library, hymn shortcut, translation import/delete |
+| `/settings-admin` | PIN-protected church name & logo, display appearance (backgrounds, colors, sizes, layout), saved Looks, backups, admin PIN change |
 
 Everything runs locally in Docker (React + FastAPI + MongoDB). No internet is needed during a service; scripture is looked up from translations imported into the local database. KJV is bundled and imported automatically on first start.
 
@@ -58,9 +58,12 @@ The PIN is stored in the database only as a bcrypt hash. Five wrong PIN attempts
 
 `/settings-admin` has a tab per display (`/bible`, `/register`) with a live preview (landscape/portrait, optional sample content):
 
+- church name and logo (shown at the top or bottom of both displays and on the idle slide)
 - colors: background, main text, accent, secondary text, panel/tile color and opacity
 - background image upload (PNG/JPG/WEBP/GIF, max 12 MB, stored in MongoDB so it is kept through upgrades)
 - blur, darken/tint, and a slow "parallax drift" motion with adjustable speed
+- Bible layout: scripture reference size/color (separate from verse text), verse text size nudge, translation label show/hide and position (top/bottom, left/center/right)
+- **Saved Looks**: save the current style under a name (e.g. "Easter", "Christmas") and apply it again with one click
 
 Saving pushes the change to the open displays instantly.
 
@@ -84,19 +87,27 @@ A translation can't be deleted while it is on the live display or if it is the l
 
 ## Reference formats
 
-`Romans 6:23`, `Rom 6:23-25`, `Psalm 23`, `John 3:16-4:2` (cross-chapter), `John 3-4`, `1 Jn 1:9,10`, `Romans 6:23; 8:1`. Every verse becomes its own slide (max 300 per passage). If a lookup fails, use the Manual text tab – blank lines separate slides.
+`Romans 6:23`, `Rom 6:23-25`, `Psalm 23`, `John 3:16-4:2` (cross-chapter), `John 3-4`, `1 Jn 1:9,10`, `Romans 6:23; 8:1`. Every verse becomes its own slide (max 300 per passage). If a lookup fails, use the Manual text tab – blank lines separate slides. Tick **Reference only** on the lookup tab to show just the reference (e.g. `John 3:16-18`) on a single slide, without the verse text.
+
+## Custom slides, hymns & slide library
+
+- **Custom slide** tab (Compose panel): a title plus optional text – no scripture lookup. A line containing only `---` starts a new slide (e.g. a set of announcements stepped through with Next/Prev). The title uses the Scripture Reference style and the text uses the Verse Text style; no translation label is shown.
+- **Hymn shortcut** (same tab): enter number, title and page and pick a hymnal → title line `Amazing Grace`, text `Hymn 245 · Page 312` with the hymnal name below. Hymnal names are saved for the drop-down (add / delete them there) and the last one used is remembered.
+- **Save to prepared list** adds whatever is in the preview (scripture, reference only, manual text or custom slide) to the service date selected in the Prepared panel. The Prepared panel's Add dialog also has Scripture / Custom slide tabs.
+- **Save to library** keeps a slide for reuse (e.g. Welcome, Offering, Doxology). In the **Slide library** panel each saved slide has Preview, Go live and Add to the selected service date.
 
 ## Operating during a service
 
-- `/bible-admin`: pick a prepared scripture (Preview / Go live) or type a reference, check the verse-by-verse preview (each slide is editable), then **Send to screen**. Use Prev/Next, the verse chips, or arrow keys / PageUp / PageDown (works with presentation clickers). Switch translation live from the On Screen bar. **Clear to idle** returns `/bible` to the idle slide.
-- `/register-admin`: choose the service date, enter attendance and offering, **Publish to display**. Previous week is always the record from exactly 7 days earlier; if none exists the display shows `N/A`. Saving the same date again updates that record.
+- `/bible-admin`: pick a prepared item or library slide (Preview / Go live) or type a reference, check the slide-by-slide preview (each slide is editable), then **Send to screen**. Use Prev/Next, the verse chips, or arrow keys / PageUp / PageDown (works with presentation clickers). Switch translation live from the On Screen bar. **Clear to idle** returns `/bible` to the idle slide.
+- `/register-admin`: choose the service date on the calendar (dates with records are marked), enter attendance and offering, **Publish to display**. Previous week defaults to the record from exactly 7 days earlier and can be overridden with another date; if none exists the display shows `N/A`. Saving the same date again updates that record; an accidentally created date can be deleted from the history list.
+- Both admin calendars mark dates that already have data (register records / prepared items).
 
 Displays reconnect automatically after a backend restart or network blip and re-sync the current state.
 
 ## Backups
 
 `/settings-admin` → **Backups** tab:
-- **Back up now** and a weekly automatic backup (choose day, time and how many to keep). Backups are gzip files in the `backups/` folder of the install (mounted into the backend), containing register records, translations, prepared scripture, display settings, looks and images (not the PIN).
+- **Back up now** and a weekly automatic backup (choose day, time and how many to keep). Backups are gzip files in the `backups/` folder of the install (mounted into the backend), containing register records, translations, prepared lists, slide library, hymnal names, display settings, looks and images (not the PIN).
 - Download, delete or restore any backup, or restore from an uploaded backup file (restore replaces current data – confirm required).
 - Optional email of each backup using your own SMTP account (e.g. Gmail: `smtp.gmail.com`, port 587, STARTTLS, Google app password). Use **Send test email** to check. Email needs internet on the NUC; local backups do not.
 - The schedule uses the NUC's local time (`/etc/localtime` is mounted into the backend).
@@ -113,7 +124,7 @@ docker compose down               # stop (data is kept; never add -v)
 ## Repository layout
 
 ```
-backend/    FastAPI app (server.py, bible_routes.py, register_routes.py, importer.py, reference.py, books.py), Dockerfile, seed/kjv.csv
+backend/    FastAPI app (server.py, bible_routes.py, library_routes.py, register_routes.py, appearance*.py, looks_routes.py, backup*.py, importer.py, reference.py, books.py), Dockerfile, seed/kjv.csv
 frontend/   React app, Dockerfile, nginx/default.conf.template
 docker-compose.yml  env.template  install.sh  upgrade.sh  scripts/common.sh
 data/idle/  optional idle slide image (mounted read-only into the backend)

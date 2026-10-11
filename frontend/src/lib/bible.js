@@ -27,6 +27,19 @@ export function customDraft(title, body = "") {
   };
 }
 
+export function hymnDraft({ number, title, page, hymnal }) {
+  const n = number.trim(), t = title.trim(), p = page.trim();
+  const line = [t && n ? `Hymn ${n}` : "", p ? `Page ${p}` : ""].filter(Boolean).join(" · ");
+  return customDraft(t || `Hymn ${n}`, [line, hymnal.trim()].filter(Boolean).join("\n"));
+}
+
+export const itemDetail = (it, defaultCode) => {
+  if (it.kind === "custom") return "custom slide";
+  if (it.preloaded_text_optional) return "manual text";
+  const code = it.translation_code || `default (${defaultCode})`;
+  return it.reference_only ? `reference only · ${code}` : code;
+};
+
 export async function lookupDraft(reference, translation_code) {
   const { data } = await bibleApi.post("/bible/lookup", { reference, translation_code });
   return data;
