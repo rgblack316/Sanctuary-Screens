@@ -82,6 +82,13 @@ See original problem statement; acceptance criteria listed there.
 - "Save to prepared list" for any draft; Prepared dialog has Scripture / Custom slide tabs + reference-only option; prepared items now have kind + reference_only
 - Testing: iteration_12 passed (backend 9/9, frontend 100%)
 
+## Implemented (2026-10-11, iteration 14)
+- Slide Library (bible_library, library_routes.py): Save to library from any draft (name auto-suffixed: "(KJV)", "(reference only)", "(manual)"), Preview / Go live / Add to selected service date / delete
+- Hymn shortcut (Custom slide tab): number, title, page, hymnal -> title "Amazing Grace", text "Hymn 245 · Page 312" + hymnal line; hymnal names saved for a drop-down (bible_hymnals), last used remembered (bible_settings.last_hymnal)
+- New collections included in backups; README updated with all recent features
+- Testing: iteration_13 passed (backend 17/17, frontend 100%)
+
+
 
 ## Backlog
 - P1: Run install.sh on the real NUC and verify host networking, reboot persistence, offline use

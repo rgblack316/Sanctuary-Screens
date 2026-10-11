@@ -1,0 +1,31 @@
+{
+  "summary": "iteration_13: tested new Slide Library and Hymn Shortcut features (backend endpoints + frontend flows). All 17 backend tests pass; frontend hymn builder, library save/preview/go-live/add-to-service/delete, hymnal CRUD, and last_used persistence across reload all working. /bible display shows hymn custom slide correctly without translation badge and with line breaks preserved.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Slide library", "issues": ["Saving a reference-only lookup and a normal lookup for the same reference (e.g. John 3:16) collides because the library name is derived from draft.normalized_reference and must be unique (CI). User sees generic 'already exists' toast with no way to disambiguate. Consider auto-suffixing (e.g. ' (reference only)') in Composer.saveLibrary, or expose an editable name field in the save dialog."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_library_hymnals.py", "/app/test_reports/pytest/iter13.xml"],
+  "action_items": [
+    "Optional UX: give the user a way to save both reference-only and normal variants of the same passage to the library (editable name on save, or auto-suffix). Current duplicate-name 409 is correct backend behavior but confusing in the UI.",
+    "Optional: /api/bible/display/clear is a POST endpoint; nothing broken, just FYI for future testers (not /api/bible/clear)."
+  ],
+  "critical_code_review_comments": [
+    "library_routes.py is clean, async, excludes _id (via BaseDocument.from_mongo), uses case-insensitive regex with proper re.escape, auth-protected at router level.",
+    "DELETE /api/bible/hymnals/{id} correctly clears last_used only when the deleted hymnal's name matched (atomic conditional update).",
+    "HymnalSelect: effect depends on `load` only — fine because load is useCallback with empty deps; onChange is intentionally omitted to avoid clobbering user selection after mount.",
+    "hymnDraft logic matches spec: title='Amazing Grace', first line 'Hymn 245 · Page 312', then hymnal on next line. Number-only produces title 'Hymn 245'. Number+page without title produces title 'Hymn 245', body 'Page 312'. Empty number & title raises toast.",
+    "Composer.saveLibrary derives name from draft.normalized_reference without allowing override — see design_issues above."
+  ],
+  "updated_files": ["/app/backend/tests/test_library_hymnals.py", "/app/test_reports/iteration_13.json"],
+  "success_rate": {"backend": "100% (17/17)", "frontend": "100% of flows exercised; one minor UX design note"},
+  "test_credentials": "PIN 1234 (bible area); unlock via POST /api/auth/unlock",
+  "seed_data_creation": "Created and then DELETED: TEST Blue Hymnal (hymnal), 'Amazing Grace' + 'John 3:16' library items. last_used reset to ''. Display cleared to idle. No user data touched.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Backend tests at /app/backend/tests/test_library_hymnals.py — safe to re-run (self-cleans). Hymnal/library endpoints verified: 401 without auth, 409 on duplicate name (CI), 404 on bad/missing id, last_used cleared only on matching delete. Frontend testids confirmed working: hymn-form, hymn-number-input, hymn-title-input, hymn-page-input, hymnal-select, hymnal-option-none, hymnal-new-input, hymnal-add-btn, hymnal-delete-btn, hymn-build-btn, save-to-library-btn, library-panel, library-item-N, library-item-name-N, library-preview-N, library-golive-N, library-add-service-N, library-delete-N. PIN gate uses 4 single-digit inputs — focus the first and keyboard.type('1234'). Service date input is input[type=date] (also has data-testid=service-date-input). Preserve user's appearance images/logo/church_name.",
+  "rca of the issue": "N/A — no bugs"
+}

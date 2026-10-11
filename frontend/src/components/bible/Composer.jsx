@@ -68,8 +68,10 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
   const saveLibrary = async () => {
     const { service_date, title_or_note, ...item } = preparedFromDraft(draft, serviceDate);
     try {
-      await bibleApi.post("/bible/library", { ...item, name: draft.normalized_reference });
-      toast.success(`${draft.normalized_reference} saved to the slide library`);
+      const suffix = { reference_only: " (reference only)", local_lookup: ` (${draft.translation_code})`, manual: " (manual)" }[draft.source_type] || "";
+      const name = `${draft.normalized_reference}${suffix}`;
+      await bibleApi.post("/bible/library", { ...item, name });
+      toast.success(`${name} saved to the slide library`);
       onLibrary();
     } catch (err) {
       toast.error(errMsg(err));
