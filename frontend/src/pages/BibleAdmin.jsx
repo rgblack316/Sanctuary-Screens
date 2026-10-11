@@ -38,7 +38,7 @@ function BibleConsole() {
       <div className="grid gap-8 lg:grid-cols-12">
         <div className="space-y-8 lg:col-span-5">
           <PreparedList translations={translations} defaultCode={defaultCode} onLoad={setDraft} date={date} setDate={setDate} tick={preparedTick} />
-          <SlideLibrary defaultCode={defaultCode} onLoad={setDraft} date={date} tick={libraryTick} onPrepared={bumpPrepared} />
+          <SlideLibrary translations={translations} defaultCode={defaultCode} onLoad={setDraft} date={date} tick={libraryTick} onPrepared={bumpPrepared} />
         </div>
         <div className="lg:col-span-7">
           <Composer translations={translations} defaultCode={defaultCode} draft={draft} setDraft={setDraft}

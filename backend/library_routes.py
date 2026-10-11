@@ -71,6 +71,21 @@ async def create_library_item(body: LibraryIn):
     return item.model_dump()
 
 
+@router.put("/library/{item_id}")
+async def update_library_item(item_id: str, body: LibraryIn):
+    name = body.name.strip()
+    if not await db.bible_library.find_one({"_id": _oid(item_id)}):
+        raise HTTPException(404, "Library slide not found")
+    if await db.bible_library.find_one({"name": _ci(name), "_id": {"$ne": _oid(item_id)}}):
+        raise HTTPException(409, f"A library slide named '{name}' already exists.")
+    fields = {**body.model_dump(), "name": name}
+    await db.bible_library.update_one({"_id": _oid(item_id)}, {"$set": fields})
+    content = {k: v for k, v in fields.items() if k != "name"}
+    res = await db.bible_prepared.update_many({"library_id": item_id}, {"$set": {**content, "title_or_note": name}})
+    item = LibraryItem.from_mongo(await db.bible_library.find_one({"_id": _oid(item_id)}))
+    return {**item.model_dump(), "prepared_updated": res.modified_count}
+
+
 @router.delete("/library/{item_id}")
 async def delete_library_item(item_id: str):
     if not (await db.bible_library.delete_one({"_id": _oid(item_id)})).deleted_count:

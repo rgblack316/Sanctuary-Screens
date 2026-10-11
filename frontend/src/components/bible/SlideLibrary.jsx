@@ -1,13 +1,21 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { CalendarPlus, MonitorUp, Trash2 } from "lucide-react";
+import { CalendarPlus, MonitorUp, Pencil, Trash2 } from "lucide-react";
 import { Panel } from "@/components/AdminShell";
 import { Button } from "@/components/ui/button";
 import { bibleApi, errMsg } from "@/lib/api";
 import { draftFromPrepared, itemDetail, publishDraft } from "@/lib/bible";
+import { PreparedDialog } from "@/components/bible/PreparedDialog";
 
-export const SlideLibrary = ({ defaultCode, onLoad, date, tick, onPrepared }) => {
+export const SlideLibrary = ({ translations, defaultCode, onLoad, date, tick, onPrepared }) => {
   const [items, setItems] = useState([]);
+  const [editing, setEditing] = useState(null);
+
+  const saveEdit = async ({ service_date, title_or_note, library_id, ...body }) => {
+    const { data } = await bibleApi.put(`/bible/library/${editing.id}`, body);
+    toast.success(data.prepared_updated ? `Saved · updated ${data.prepared_updated} prepared item(s)` : "Library slide saved");
+    onPrepared();
+  };
 
   const load = useCallback(async () => {
     try {
@@ -35,7 +43,7 @@ export const SlideLibrary = ({ defaultCode, onLoad, date, tick, onPrepared }) =>
 
   const addToService = async ({ id, name, created_at, ...rest }) => {
     try {
-      await bibleApi.post("/bible/prepared", { ...rest, title_or_note: name, service_date: date });
+      await bibleApi.post("/bible/prepared", { ...rest, title_or_note: name, service_date: date, library_id: id });
       toast.success(`${name} added to ${date}`);
       onPrepared();
     } catch (e) {
@@ -59,6 +67,9 @@ export const SlideLibrary = ({ defaultCode, onLoad, date, tick, onPrepared }) =>
                 <p className="font-display font-bold" data-testid={`library-item-name-${i}`}>{it.name}</p>
                 <p className="truncate text-xs text-slate-500">{it.reference} · {itemDetail(it, defaultCode)}</p>
               </div>
+              <button type="button" onClick={() => setEditing(it)} aria-label="Edit" data-testid={`library-edit-${i}`} className="rounded-md p-1.5 text-slate-400 hover:bg-[#1A202C] hover:text-amber-300">
+                <Pencil size={14} />
+              </button>
               <button type="button" onClick={() => remove(it)} aria-label="Delete" data-testid={`library-delete-${i}`} className="rounded-md p-1.5 text-slate-400 hover:bg-[#1A202C] hover:text-rose-300">
                 <Trash2 size={14} />
               </button>
@@ -71,6 +82,10 @@ export const SlideLibrary = ({ defaultCode, onLoad, date, tick, onPrepared }) =>
           </li>
         ))}
       </ul>
+      {editing && (
+        <PreparedDialog item={editing} translations={translations} defaultCode={defaultCode} title="Edit library slide" submit={saveEdit}
+          onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load(); }} />
+      )}
     </Panel>
   );
 };

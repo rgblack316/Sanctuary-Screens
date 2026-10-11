@@ -32,7 +32,9 @@ const CustomFields = ({ form, set }) => (
   </>
 );
 
-export const PreparedDialog = ({ item, translations, defaultCode, onClose, onSaved }) => {
+export const PreparedDialog = ({ item, translations, defaultCode, onClose, onSaved, submit, title }) => {
+  const withName = item.name !== undefined;
+  const [name, setName] = useState(item.name || "");
   const [form, setForm] = useState({
     service_date: item.service_date,
     title_or_note: item.title_or_note || "",
@@ -41,21 +43,24 @@ export const PreparedDialog = ({ item, translations, defaultCode, onClose, onSav
     preloaded_text_optional: item.preloaded_text_optional || "",
     kind: item.kind || "scripture",
     reference_only: !!item.reference_only,
+    library_id: item.library_id || null,
   });
   const [busy, setBusy] = useState(false);
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
   const custom = form.kind === "custom";
 
   const save = async () => {
+    if (withName && !name.trim()) return toast.error("Name is required.");
     if (!form.reference.trim()) return toast.error(custom ? "Title is required." : "Reference is required.");
     const body = { ...form, translation_code: custom ? null : form.translation_code,
       preloaded_text_optional: !custom && form.reference_only ? "" : form.preloaded_text_optional,
       reference_only: !custom && form.reference_only };
     setBusy(true);
     try {
-      if (item.id) await bibleApi.put(`/bible/prepared/${item.id}`, body);
+      if (submit) await submit({ ...body, name: name.trim() });
+      else if (item.id) await bibleApi.put(`/bible/prepared/${item.id}`, body);
       else await bibleApi.post("/bible/prepared", body);
-      toast.success("Prepared list saved");
+      if (!submit) toast.success("Prepared list saved");
       onSaved();
     } catch (e) {
       toast.error(errMsg(e));
@@ -68,8 +73,11 @@ export const PreparedDialog = ({ item, translations, defaultCode, onClose, onSav
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="border-[#222B3E] bg-[#121620]" data-testid="prepared-dialog">
         <DialogHeader>
-          <DialogTitle className="font-display">{item.id ? "Edit prepared item" : "Add prepared item"}</DialogTitle>
+          <DialogTitle className="font-display">{title || (item.id ? "Edit prepared item" : "Add prepared item")}</DialogTitle>
         </DialogHeader>
+        {withName && (
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Library name" maxLength={120} data-testid="library-name-input" className="bg-[#0B0E14]" />
+        )}
         <Tabs value={form.kind} onValueChange={set("kind")}>
           <TabsList className="bg-[#0B0E14]">
             <TabsTrigger value="scripture" data-testid="prepared-kind-scripture">Scripture</TabsTrigger>

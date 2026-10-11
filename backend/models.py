@@ -70,4 +70,5 @@ class PreparedItem(BaseDocument):
     preloaded_text_optional: str = ""
     kind: str = "scripture"
     reference_only: bool = False
+    library_id: Optional[str] = None
     sort_order: int = 0

@@ -366,6 +366,7 @@ class PreparedIn(BaseModel):
     preloaded_text_optional: str = Field("", max_length=20000)
     kind: Literal["scripture", "custom"] = "scripture"
     reference_only: bool = False
+    library_id: Optional[str] = None
 
 
 class MoveIn(BaseModel):
