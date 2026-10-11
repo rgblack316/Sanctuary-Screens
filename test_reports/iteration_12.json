@@ -1,0 +1,27 @@
+{
+  "summary": "Iteration 12: Custom-slide + Reference-only features in Bible Admin fully verified. Backend pytest (9/9): POST /api/bible/publish accepts source_type 'custom' (title+body split by lone '---', translation_code forced to null in response), 'reference_only' (keeps translation_code, verse_text ''); rejects source_type manual/local_lookup with empty verse_text (422); /api/bible/display/translation on a reference_only passage returns updated state with source_type still 'reference_only' and verse_text ''. Prepared list accepts kind='custom' (translation_code null) and reference_only=true (kind='scripture'), PUT/MOVE/DELETE/GET all work. Frontend playwright: composer-tab-custom builds 'Hymn 245 – Amazing Grace' + body 'Page 312\\n---\\nPlease stand' -> 2 slides · custom slide; empty body -> 1 slide ('Title only'). After publish of a title-only custom slide /bible shows only bible-reference ('Welcome'), no bible-verse-text, no bible-translation-badge, data-mode=passage; publishing custom slide with multi-line text shows bible-verse-text with preserved line breaks ('Page 312\\nVerse 1') and NO bible-translation-badge; next/prev move between the --- slides correctly; LiveControl shows live-source-note='custom slide' and hides live-translation-select for custom. Reference-only lookup (reference-only-checkbox + John 3:16-18) builds 1 slide labelled 'reference only · KJV'; publishing shows no bible-verse-text, keeps translation badge logic (count=0 at test time because appearance.translation_show appears off for current look) and live-translation-select is present; live-source-note='reference only'. Prepared dialog has prepared-kind-scripture/prepared-kind-custom tabs, prepared-reference-only-checkbox, and prepared-custom-title-input/prepared-custom-body-input. save-to-prepared-btn posted exactly the right bodies: refonly -> {kind:'scripture', reference_only:true, preloaded_text_optional:''}; custom -> {kind:'custom', translation_code:null, preloaded_text_optional:'Page 1\\n---\\nPage 2'}. Prepared-item-kind-N correctly rendered 'reference only · KJV' and 'custom slide'. Edit (prepared-edit) opens the dialog with Custom tab preselected for custom items; prepared-save-btn persists edits; prepared-golive publishes the custom slide to /bible (3 slides after edit). Reorder (prepared-up/down) and cleanup via prepared-delete worked. Regression: normal reference lookup (Psalm 23:1) and Manual text tab both still build drafts; clear-to-idle-btn reset display to idle. Preview DB untouched: no appearance/image/logo changes; all transient prepared items on 2099-01-04 removed; final /api/bible/prepared-dates=[].",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter12_custom_refonly.py",
+    "/app/test_reports/pytest/iter12.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Composer save-to-prepared uses preparedFromDraft which for a manual draft stores verses joined by '\\n\\n'. That is lossy if the manual draft contained consecutive blank lines inside a slide; round-tripping (save then load) will re-split differently. Fine for the current spec but worth a comment.",
+    "customDraft splits body on /^[ \\t]*---[ \\t]*$/m then filters empty parts. A body of just '---' therefore produces 0 parts and falls back to [''] (one empty slide). That matches the Title-only expectation but is implicit; consider documenting that behaviour.",
+    "bible_routes.publish forces body.translation_code = None for source_type=='custom' before validating, but if the client sends an invalid translation_code for a 'manual' source it is silently kept (get_translation is only called when truthy, so a bogus code would 404). Expected to never happen from the UI but may surface via API.",
+    "LiveControl SOURCE_NOTE lacks a label for source_type=='local_lookup' (deliberate: no note shown). Confirmed in test. Safe.",
+    "PublishIn.verses min_length=1 — a user who saves a custom slide draft and then clears everything can't reach an empty-verses state via the UI (customDraft always returns at least one verse), so the min_length guard is defensive only."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter12_custom_refonly.py"
+  ],
+  "success_rate": {"backend": "100% (9/9)", "frontend": "100%"},
+  "test_credentials": "Admin PIN 1234",
+  "seed_data_creation": "Transient prepared items on 2099-01-04 (reference-only + custom), all deleted at end. /api/bible/prepared-dates returns [] at finish. Display cleared to idle. No appearance/image/logo endpoints touched.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Custom + reference-only features green. Bible display is idle at test finish. KJV is the only installed translation and remains the default. No prepared items currently exist (prepared-dates=[]). Register data from iter11 (2026-09-27, 2026-10-04 active) was not touched. First attempt to set the prepared date failed because the correct selector is '[data-testid=\"prepared-date-input\"]' (type=date input), NOT '[data-testid=\"prepared-date\"] input'; use that selector in future playwright runs. ISO yyyy-mm-dd works in fill().",
+  "rca of the issue": "N/A — all features behave per spec."
+}

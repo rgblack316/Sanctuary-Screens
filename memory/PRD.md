@@ -76,6 +76,13 @@ See original problem statement; acceptance criteria listed there.
 - Register: delete a service date (history Delete + confirm); clears active if needed, reverts comparisons that pointed at it
 - Testing: iteration_11 passed (21/21 backend, frontend 100%); no real SMTP tested
 
+## Implemented (2026-10-11, iteration 13)
+- Bible Admin Compose: "Custom slide" tab (Title + optional body; a line with only --- starts a new slide), no DB lookup; title uses Reference style, body uses Verse style, no translation label
+- Lookup tab "Reference only" checkbox: one slide with just the reference (translation label kept, live translation switch works)
+- "Save to prepared list" for any draft; Prepared dialog has Scripture / Custom slide tabs + reference-only option; prepared items now have kind + reference_only
+- Testing: iteration_12 passed (backend 9/9, frontend 100%)
+
+
 ## Backlog
 - P1: Run install.sh on the real NUC and verify host networking, reboot persistence, offline use
 - P1: Final idle slide design asset
