@@ -266,8 +266,8 @@ async def lookup(body: LookupIn):
 
 
 class SlideIn(BaseModel):
-    reference_label: str = Field(..., min_length=1, max_length=120)
-    verse_text: str = Field(..., min_length=1, max_length=5000)
+    reference_label: str = Field(..., min_length=1, max_length=200)
+    verse_text: str = Field("", max_length=5000)
     book_name: str = ""
     chapter: Optional[int] = None
     verse: Optional[int] = None
@@ -277,13 +277,17 @@ class PublishIn(BaseModel):
     reference_input: str = Field("", max_length=200)
     normalized_reference: str = Field(..., min_length=1, max_length=200)
     translation_code: Optional[str] = None
-    source_type: Literal["local_lookup", "manual"]
+    source_type: Literal["local_lookup", "manual", "reference_only", "custom"]
     verses: List[SlideIn] = Field(..., min_length=1, max_length=MAX_SLIDES)
     start_index: int = 0
 
 
 @router.post("/publish", dependencies=[BIBLE_AUTH])
 async def publish(body: PublishIn):
+    if body.source_type in ("local_lookup", "manual") and any(not v.verse_text.strip() for v in body.verses):
+        raise HTTPException(422, "Every scripture slide needs text.")
+    if body.source_type == "custom":
+        body.translation_code = None
     if body.translation_code:
         await get_translation(body.translation_code)
     idx = max(0, min(body.start_index, len(body.verses) - 1))
@@ -340,9 +344,11 @@ async def switch_translation(body: SwitchIn):
     p = await active_passage()
     if not p:
         raise HTTPException(409, "No scripture is on the display.")
-    if p.source_type != "local_lookup":
+    if p.source_type not in ("local_lookup", "reference_only"):
         raise HTTPException(409, "Manual text cannot be switched to another translation.")
     result = await lookup_passage(p.normalized_reference, body.translation_code)
+    if p.source_type == "reference_only":
+        result["verses"] = [VerseSlide(reference_label=result["normalized_reference"], verse_text="").model_dump()]
     st = await display_doc()
     idx = max(0, min(st.get("active_slide_index", 0), len(result["verses"]) - 1))
     await db.bible_passages.update_one({"_id": ObjectId(p.id)}, {"$set": {
@@ -358,6 +364,8 @@ class PreparedIn(BaseModel):
     reference: str = Field(..., min_length=1, max_length=200)
     translation_code: Optional[str] = None
     preloaded_text_optional: str = Field("", max_length=20000)
+    kind: Literal["scripture", "custom"] = "scripture"
+    reference_only: bool = False
 
 
 class MoveIn(BaseModel):

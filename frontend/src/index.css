@@ -120,6 +120,8 @@
     letter-spacing: 0.12em; text-transform: uppercase;
     font-size: max(0.9rem, var(--ss-ref-size, 4vmin));
 }
+.bible-text-box { --ss-ref-solo-size: calc(max(0.9rem, var(--ss-ref-size, 4vmin)) * 1.8); }
+.bible-ref-solo { font-size: var(--ss-ref-solo-size); line-height: 1.2; max-width: 92vw; text-wrap: balance; }
 .bible-meta { font-size: clamp(0.75rem, 2.2vmin, 2rem); color: var(--ss-muted, #94a3b8); }
 .bible-footer { border-top: 1px solid var(--ss-line, #222b3e); }
 .fade-in { animation: fadeIn 280ms ease-out both; }

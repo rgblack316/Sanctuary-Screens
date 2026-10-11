@@ -4,8 +4,33 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { bibleApi, errMsg } from "@/lib/api";
 import { TranslationSelect } from "@/components/bible/TranslationSelect";
+
+const ScriptureFields = ({ form, set, translations }) => (
+  <>
+    <Input value={form.reference} onChange={(e) => set("reference")(e.target.value)} placeholder="Reference, e.g. Psalm 23:1-6" data-testid="prepared-reference-input" className="bg-[#0B0E14]" />
+    <Input value={form.title_or_note} onChange={(e) => set("title_or_note")(e.target.value)} placeholder="Note (optional), e.g. Opening reading" maxLength={120} data-testid="prepared-note-input" className="bg-[#0B0E14]" />
+    <TranslationSelect translations={translations} value={form.translation_code} onChange={set("translation_code")} testid="prepared-translation-select" />
+    <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-slate-300">
+      <Checkbox checked={form.reference_only} onCheckedChange={(v) => set("reference_only")(!!v)} data-testid="prepared-reference-only-checkbox" />
+      Reference only (no verse text)
+    </label>
+    {!form.reference_only && (
+      <Textarea value={form.preloaded_text_optional} onChange={(e) => set("preloaded_text_optional")(e.target.value)} rows={4} placeholder="Optional manual text (overrides lookup). Blank line = new slide." data-testid="prepared-text-input" className="bg-[#0B0E14]" />
+    )}
+  </>
+);
+
+const CustomFields = ({ form, set }) => (
+  <>
+    <Input value={form.reference} onChange={(e) => set("reference")(e.target.value)} placeholder="Title, e.g. Hymn 245 – Amazing Grace" maxLength={200} data-testid="prepared-custom-title-input" className="bg-[#0B0E14]" />
+    <Input value={form.title_or_note} onChange={(e) => set("title_or_note")(e.target.value)} placeholder="Note (optional, not shown on screen)" maxLength={120} data-testid="prepared-custom-note-input" className="bg-[#0B0E14]" />
+    <Textarea value={form.preloaded_text_optional} onChange={(e) => set("preloaded_text_optional")(e.target.value)} rows={5} placeholder={"Optional text, e.g. Page 312\nA line with only --- starts a new slide."} data-testid="prepared-custom-body-input" className="bg-[#0B0E14]" />
+  </>
+);
 
 export const PreparedDialog = ({ item, translations, defaultCode, onClose, onSaved }) => {
   const [form, setForm] = useState({
@@ -14,16 +39,22 @@ export const PreparedDialog = ({ item, translations, defaultCode, onClose, onSav
     reference: item.reference || "",
     translation_code: item.translation_code || defaultCode,
     preloaded_text_optional: item.preloaded_text_optional || "",
+    kind: item.kind || "scripture",
+    reference_only: !!item.reference_only,
   });
   const [busy, setBusy] = useState(false);
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
+  const custom = form.kind === "custom";
 
   const save = async () => {
-    if (!form.reference.trim()) return toast.error("Reference is required.");
+    if (!form.reference.trim()) return toast.error(custom ? "Title is required." : "Reference is required.");
+    const body = { ...form, translation_code: custom ? null : form.translation_code,
+      preloaded_text_optional: !custom && form.reference_only ? "" : form.preloaded_text_optional,
+      reference_only: !custom && form.reference_only };
     setBusy(true);
     try {
-      if (item.id) await bibleApi.put(`/bible/prepared/${item.id}`, form);
-      else await bibleApi.post("/bible/prepared", form);
+      if (item.id) await bibleApi.put(`/bible/prepared/${item.id}`, body);
+      else await bibleApi.post("/bible/prepared", body);
       toast.success("Prepared list saved");
       onSaved();
     } catch (e) {
@@ -37,13 +68,16 @@ export const PreparedDialog = ({ item, translations, defaultCode, onClose, onSav
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="border-[#222B3E] bg-[#121620]" data-testid="prepared-dialog">
         <DialogHeader>
-          <DialogTitle className="font-display">{item.id ? "Edit prepared scripture" : "Add prepared scripture"}</DialogTitle>
+          <DialogTitle className="font-display">{item.id ? "Edit prepared item" : "Add prepared item"}</DialogTitle>
         </DialogHeader>
+        <Tabs value={form.kind} onValueChange={set("kind")}>
+          <TabsList className="bg-[#0B0E14]">
+            <TabsTrigger value="scripture" data-testid="prepared-kind-scripture">Scripture</TabsTrigger>
+            <TabsTrigger value="custom" data-testid="prepared-kind-custom">Custom slide</TabsTrigger>
+          </TabsList>
+        </Tabs>
         <div className="space-y-3">
-          <Input value={form.reference} onChange={(e) => set("reference")(e.target.value)} placeholder="Reference, e.g. Psalm 23:1-6" data-testid="prepared-reference-input" className="bg-[#0B0E14]" />
-          <Input value={form.title_or_note} onChange={(e) => set("title_or_note")(e.target.value)} placeholder="Note (optional), e.g. Opening reading" maxLength={120} data-testid="prepared-note-input" className="bg-[#0B0E14]" />
-          <TranslationSelect translations={translations} value={form.translation_code} onChange={set("translation_code")} testid="prepared-translation-select" />
-          <Textarea value={form.preloaded_text_optional} onChange={(e) => set("preloaded_text_optional")(e.target.value)} rows={4} placeholder="Optional manual text (overrides lookup). Blank line = new slide." data-testid="prepared-text-input" className="bg-[#0B0E14]" />
+          {custom ? <CustomFields form={form} set={set} /> : <ScriptureFields form={form} set={set} translations={translations} />}
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose} data-testid="prepared-cancel-btn">Cancel</Button>

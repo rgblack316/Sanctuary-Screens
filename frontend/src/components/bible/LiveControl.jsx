@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { bibleApi, errMsg } from "@/lib/api";
 import { TranslationSelect } from "@/components/bible/TranslationSelect";
 
+const SOURCE_NOTE = { manual: "manual text", custom: "custom slide", reference_only: "reference only" };
 const isTyping = (el) => el && (["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName) || el.isContentEditable);
 
 export const LiveControl = ({ live, translations }) => {
@@ -40,9 +41,9 @@ export const LiveControl = ({ live, translations }) => {
           {active ? "ON SCREEN" : "IDLE"}
         </span>
         <h2 className="font-display text-lg font-bold" data-testid="live-reference">{active ? live.reference : "Idle slide is showing"}</h2>
-        {active && live.source_type === "manual" && <span className="text-xs text-slate-500">manual text</span>}
+        {active && SOURCE_NOTE[live.source_type] && <span className="text-xs text-slate-500" data-testid="live-source-note">{SOURCE_NOTE[live.source_type]}</span>}
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          {active && live.source_type === "local_lookup" && (
+          {active && ["local_lookup", "reference_only"].includes(live.source_type) && (
             <TranslationSelect
               translations={translations}
               value={live.translation_code}
@@ -66,7 +67,7 @@ export const LiveControl = ({ live, translations }) => {
             <p className="font-display text-sm font-bold uppercase tracking-widest text-amber-400" data-testid="live-slide-label">
               {live.slide.reference_label} <span className="text-slate-500">· {live.slide_index + 1}/{live.total}</span>
             </p>
-            <p className="mt-2 line-clamp-3 text-lg text-slate-200" data-testid="live-slide-text">{live.slide.verse_text}</p>
+            <p className="mt-2 line-clamp-3 whitespace-pre-line text-lg text-slate-200" data-testid="live-slide-text">{live.slide.verse_text || <span className="italic text-slate-500">Title only</span>}</p>
             {live.total > 1 && (
               <div className="mt-4 flex flex-wrap justify-center gap-1.5">
                 {live.slides.map((s, i) => (

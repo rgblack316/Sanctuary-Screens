@@ -3,8 +3,8 @@ import { toast } from "sonner";
 import { ArrowDown, ArrowUp, MonitorUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { Panel } from "@/components/AdminShell";
 import { Button } from "@/components/ui/button";
-import { bibleApi, errMsg, todayLocal } from "@/lib/api";
-import { lookupDraft, manualDraft, publishDraft } from "@/lib/bible";
+import { bibleApi, errMsg } from "@/lib/api";
+import { draftFromPrepared, publishDraft } from "@/lib/bible";
 import { PreparedDialog } from "@/components/bible/PreparedDialog";
 import { DatePicker } from "@/components/DatePicker";
 
@@ -17,8 +17,14 @@ const IconBtn = ({ onClick, label, testid, children, danger }) => (
   </button>
 );
 
-export const PreparedList = ({ translations, defaultCode, onLoad }) => {
-  const [date, setDate] = useState(todayLocal());
+const itemDetail = (it, defaultCode) => {
+  if (it.kind === "custom") return "custom slide";
+  if (it.preloaded_text_optional) return "manual text";
+  const code = it.translation_code || `default (${defaultCode})`;
+  return it.reference_only ? `reference only · ${code}` : code;
+};
+
+export const PreparedList = ({ translations, defaultCode, onLoad, date, setDate, tick }) => {
   const [items, setItems] = useState([]);
   const [dialog, setDialog] = useState(null);
   const [markedDates, setMarkedDates] = useState([]);
@@ -36,16 +42,11 @@ export const PreparedList = ({ translations, defaultCode, onLoad }) => {
     }
   }, [date]);
 
-  useEffect(() => { load(); }, [load]);
-
-  const toDraft = async (item) => {
-    if (item.preloaded_text_optional?.trim()) return manualDraft(item.reference, item.preloaded_text_optional);
-    return lookupDraft(item.reference, item.translation_code || defaultCode);
-  };
+  useEffect(() => { load(); }, [load, tick]);
 
   const loadItem = async (item, live) => {
     try {
-      const d = await toDraft(item);
+      const d = await draftFromPrepared(item, defaultCode);
       onLoad(d);
       if (live) {
         await publishDraft(d, 0);
@@ -68,7 +69,7 @@ export const PreparedList = ({ translations, defaultCode, onLoad }) => {
 
   return (
     <Panel
-      title="Prepared scripture"
+      title="Prepared for service"
       testid="prepared-panel"
       actions={
         <Button size="sm" onClick={() => setDialog({ service_date: date })} data-testid="prepared-add-btn">
@@ -81,7 +82,7 @@ export const PreparedList = ({ translations, defaultCode, onLoad }) => {
         <DatePicker value={date} onChange={setDate} testid="prepared-date" markedDates={markedDates} markLabel="Has prepared scripture" />
       </div>
       <ol className="mt-4 space-y-2" data-testid="prepared-list">
-        {items.length === 0 && <li className="text-sm text-slate-500" data-testid="prepared-empty">No scriptures prepared for this date.</li>}
+        {items.length === 0 && <li className="text-sm text-slate-500" data-testid="prepared-empty">Nothing prepared for this date.</li>}
         {items.map((it, i) => (
           <li key={it.id} className="group rounded-lg border border-[#222B3E] bg-[#0B0E14] p-3" data-testid={`prepared-item-${i}`}>
             <div className="flex items-start gap-3">
@@ -89,7 +90,7 @@ export const PreparedList = ({ translations, defaultCode, onLoad }) => {
               <div className="min-w-0 flex-1">
                 <p className="font-display font-bold" data-testid={`prepared-item-ref-${i}`}>{it.reference}</p>
                 <p className="truncate text-xs text-slate-500">
-                  {it.title_or_note || "—"} · {it.preloaded_text_optional ? "manual text" : it.translation_code || `default (${defaultCode})`}
+                  {it.title_or_note || "—"} · <span data-testid={`prepared-item-kind-${i}`}>{itemDetail(it, defaultCode)}</span>
                 </p>
               </div>
               <div className="flex items-center">

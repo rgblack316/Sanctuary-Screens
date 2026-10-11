@@ -1,17 +1,22 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { AlertTriangle, Loader2, MonitorUp, Search } from "lucide-react";
+import { AlertTriangle, ListPlus, Loader2, MonitorUp, Search } from "lucide-react";
 import { Panel } from "@/components/AdminShell";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { errMsg } from "@/lib/api";
-import { lookupDraft, manualDraft, publishDraft } from "@/lib/bible";
+import { Checkbox } from "@/components/ui/checkbox";
+import { bibleApi, errMsg } from "@/lib/api";
+import { lookupDraft, manualDraft, preparedFromDraft, publishDraft, referenceOnlyDraft } from "@/lib/bible";
+import { CustomSlideForm } from "@/components/bible/CustomSlideForm";
 import { TranslationSelect } from "@/components/bible/TranslationSelect";
 import { SlidePreview } from "@/components/bible/SlidePreview";
 
-export const Composer = ({ translations, defaultCode, draft, setDraft }) => {
+const KIND_LABEL = { manual: "manual", custom: "custom slide", reference_only: "reference only" };
+
+export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDate, onPrepared }) => {
+  const [refOnly, setRefOnly] = useState(false);
   const [tab, setTab] = useState("lookup");
   const [reference, setReference] = useState("");
   const [code, setCode] = useState(null);
@@ -22,7 +27,7 @@ export const Composer = ({ translations, defaultCode, draft, setDraft }) => {
 
   useEffect(() => { if (!code && defaultCode) setCode(defaultCode); }, [defaultCode, code]);
   useEffect(() => {
-    if (draft?.source_type === "local_lookup") { setReference(draft.reference_input || draft.normalized_reference); setCode(draft.translation_code); }
+    if (["local_lookup", "reference_only"].includes(draft?.source_type)) { setReference(draft.reference_input || draft.normalized_reference); setCode(draft.translation_code); }
   }, [draft]);
 
   const lookup = async (e) => {
@@ -31,7 +36,7 @@ export const Composer = ({ translations, defaultCode, draft, setDraft }) => {
     setBusy(true);
     setLookupError("");
     try {
-      setDraft(await lookupDraft(reference.trim(), code));
+      setDraft(await (refOnly ? referenceOnlyDraft : lookupDraft)(reference.trim(), code));
     } catch (err) {
       setLookupError(errMsg(err, "Lookup failed"));
     } finally {
@@ -47,6 +52,16 @@ export const Composer = ({ translations, defaultCode, draft, setDraft }) => {
   const buildManual = () => {
     if (!manualLabel.trim() || !manualText.trim()) return toast.error("Enter a reference label and the text.");
     setDraft(manualDraft(manualLabel, manualText));
+  };
+
+  const savePrepared = async () => {
+    try {
+      await bibleApi.post("/bible/prepared", preparedFromDraft(draft, serviceDate));
+      toast.success(`Added to prepared list for ${serviceDate}`);
+      onPrepared();
+    } catch (err) {
+      toast.error(errMsg(err));
+    }
   };
 
   const publish = async () => {
@@ -67,6 +82,7 @@ export const Composer = ({ translations, defaultCode, draft, setDraft }) => {
         <TabsList className="mb-5 bg-[#0B0E14]">
           <TabsTrigger value="lookup" data-testid="composer-tab-lookup">Reference lookup</TabsTrigger>
           <TabsTrigger value="manual" data-testid="composer-tab-manual">Manual text</TabsTrigger>
+          <TabsTrigger value="custom" data-testid="composer-tab-custom">Custom slide</TabsTrigger>
         </TabsList>
         <TabsContent value="lookup">
           <form onSubmit={lookup} className="flex flex-col gap-3 sm:flex-row">
@@ -82,6 +98,10 @@ export const Composer = ({ translations, defaultCode, draft, setDraft }) => {
               {busy ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />} Look up
             </Button>
           </form>
+          <label className="mt-3 flex w-fit cursor-pointer items-center gap-2 text-sm text-slate-300">
+            <Checkbox checked={refOnly} onCheckedChange={(v) => setRefOnly(!!v)} data-testid="reference-only-checkbox" />
+            Reference only (show just the reference, no verse text)
+          </label>
           {lookupError && (
             <div data-testid="lookup-error" className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-200">
               <AlertTriangle size={16} /> <span className="flex-1">{lookupError}</span>
@@ -94,6 +114,9 @@ export const Composer = ({ translations, defaultCode, draft, setDraft }) => {
           <Textarea value={manualText} onChange={(e) => setManualText(e.target.value)} rows={6} placeholder="Paste or type the text. Leave a blank line between slides." data-testid="manual-text-input" className="bg-[#0B0E14]" />
           <Button variant="secondary" onClick={buildManual} data-testid="manual-build-btn">Build slides</Button>
         </TabsContent>
+        <TabsContent value="custom">
+          <CustomSlideForm setDraft={setDraft} />
+        </TabsContent>
       </Tabs>
 
       {draft && (
@@ -101,9 +124,12 @@ export const Composer = ({ translations, defaultCode, draft, setDraft }) => {
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <p className="font-display text-lg font-bold" data-testid="draft-reference">{draft.normalized_reference}</p>
             <span className="text-xs text-slate-500" data-testid="draft-slide-count">
-              {draft.verses.length} slide{draft.verses.length === 1 ? "" : "s"} · {draft.source_type === "manual" ? "manual" : draft.translation_code}
+              {draft.verses.length} slide{draft.verses.length === 1 ? "" : "s"} · {[KIND_LABEL[draft.source_type], draft.translation_code].filter(Boolean).join(" · ")}
             </span>
-            <Button onClick={publish} disabled={busy} data-testid="publish-passage-btn" className="ml-auto h-11 px-5 font-semibold">
+            <Button variant="outline" onClick={savePrepared} data-testid="save-to-prepared-btn" className="ml-auto h-11">
+              <ListPlus size={16} /> Save to prepared list
+            </Button>
+            <Button onClick={publish} disabled={busy} data-testid="publish-passage-btn" className="h-11 px-5 font-semibold">
               <MonitorUp size={16} /> Send to screen
             </Button>
           </div>

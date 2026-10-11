@@ -68,4 +68,6 @@ class PreparedItem(BaseDocument):
     reference: str
     translation_code: Optional[str] = None
     preloaded_text_optional: str = ""
+    kind: str = "scripture"
+    reference_only: bool = False
     sort_order: int = 0

@@ -18,7 +18,7 @@ const SAMPLE = {
 const baseSize = (n) => (n < 80 ? 8 : n < 160 ? 6.6 : n < 280 ? 5.4 : n < 420 ? 4.6 : n < 600 ? 3.9 : 3.3);
 
 // Shrinks the reference + verse group until it fits the box (handles very long verses on small screens).
-function FitText({ text, reference, scale = 1, refSize }) {
+function FitText({ text, reference, scale = 1, refSize, custom }) {
   const boxRef = useRef(null);
   const groupRef = useRef(null);
   const textRef = useRef(null);
@@ -35,7 +35,17 @@ function FitText({ text, reference, scale = 1, refSize }) {
     const box = boxRef.current;
     const group = groupRef.current;
     const el = textRef.current;
-    if (!box || !el || !group) return;
+    if (!box || !group) return;
+    if (!el) {
+      let r = 1;
+      const refEl = group.firstChild;
+      refEl.style.fontSize = "";
+      while (r > 0.3 && (group.scrollHeight > box.clientHeight || refEl.scrollWidth > box.clientWidth)) {
+        r *= 0.93;
+        refEl.style.fontSize = `calc(var(--ss-ref-solo-size) * ${r})`;
+      }
+      return;
+    }
     let s = baseSize(text.length) * scale;
     el.style.fontSize = `${s}vmin`;
     while (s > 1.6 && (group.scrollHeight > box.clientHeight || el.scrollWidth > box.clientWidth)) {
@@ -48,10 +58,12 @@ function FitText({ text, reference, scale = 1, refSize }) {
   return (
     <div ref={boxRef} className="bible-text-box">
       <div ref={groupRef} className="flex max-h-full flex-col items-center fade-in" key={`${reference}-${text}`}>
-        <span className="bible-ref mb-[3vmin] text-center" data-testid="bible-reference">{reference}</span>
-        <p ref={textRef} data-testid="bible-verse-text" className="bible-text" style={{ fontSize: `${size}vmin` }}>
-          {text}
-        </p>
+        <span className={`bible-ref text-center ${text ? "mb-[3vmin]" : "bible-ref-solo"}`} data-testid="bible-reference">{reference}</span>
+        {text && (
+          <p ref={textRef} data-testid="bible-verse-text" className={`bible-text ${custom ? "whitespace-pre-line" : ""}`} style={{ fontSize: `${size}vmin` }}>
+            {text}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -84,7 +96,7 @@ export default function BibleDisplay() {
           <ChurchName name={churchName} logoUrl={logoUrl} appearance={appearance} place="top" />
           <SlideMeta place="top" appearance={appearance} translationCode={data.translation_code} />
           <FitText text={data.slide.verse_text} reference={data.slide.reference_label}
-            scale={0.6 + (appearance?.verse_size ?? 5) * 0.08} refSize={appearance?.reference_size} />
+            scale={0.6 + (appearance?.verse_size ?? 5) * 0.08} refSize={appearance?.reference_size} custom={data.source_type === "custom"} />
           <SlideMeta place="bottom" appearance={appearance} translationCode={data.translation_code}
             counter={data.total > 1 ? `${data.slide_index + 1} / ${data.total}` : null} />
           <div className="mt-[2vmin]"><ChurchName name={churchName} logoUrl={logoUrl} appearance={appearance} place="bottom" /></div>

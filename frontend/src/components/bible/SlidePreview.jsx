@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Check, Pencil } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
-function SlideRow({ slide, index, onChange }) {
+function SlideRow({ slide, index, onChange, allowEmpty }) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(slide.verse_text);
 
   const save = () => {
-    if (text.trim()) onChange(index, text.trim());
+    if (text.trim() || allowEmpty) onChange(index, text.trim());
     setEditing(false);
   };
 
@@ -29,7 +29,7 @@ function SlideRow({ slide, index, onChange }) {
       {editing ? (
         <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} data-testid={`preview-slide-textarea-${index}`} className="mt-3 bg-[#121620]" autoFocus />
       ) : (
-        <p className="mt-2 text-slate-200">{slide.verse_text}</p>
+        <p className="mt-2 whitespace-pre-line text-slate-200">{slide.verse_text || <span className="italic text-slate-500">Title only</span>}</p>
       )}
     </li>
   );
@@ -41,7 +41,7 @@ export const SlidePreview = ({ draft, setDraft }) => {
   return (
     <ul className="max-h-[420px] space-y-2 overflow-y-auto pr-1" data-testid="slide-preview-list">
       {draft.verses.map((s, i) => (
-        <SlideRow key={`${draft.normalized_reference}-${i}-${s.reference_label}`} slide={s} index={i} onChange={update} />
+        <SlideRow key={`${draft.normalized_reference}-${i}-${s.reference_label}`} slide={s} index={i} onChange={update} allowEmpty={draft.source_type !== "manual" && draft.source_type !== "local_lookup"} />
       ))}
     </ul>
   );

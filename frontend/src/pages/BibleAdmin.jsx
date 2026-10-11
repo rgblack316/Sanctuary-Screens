@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { PinGate } from "@/components/live/PinGate";
 import { AdminShell } from "@/components/AdminShell";
 import { useLiveChannel } from "@/hooks/useLiveChannel";
-import { bibleApi, errMsg } from "@/lib/api";
+import { bibleApi, errMsg, todayLocal } from "@/lib/api";
 import { LiveControl } from "@/components/bible/LiveControl";
 import { Composer } from "@/components/bible/Composer";
 import { PreparedList } from "@/components/bible/PreparedList";
@@ -14,6 +14,8 @@ function BibleConsole() {
   const [translations, setTranslations] = useState([]);
   const [defaultCode, setDefaultCode] = useState(null);
   const [draft, setDraft] = useState(null);
+  const [date, setDate] = useState(todayLocal());
+  const [preparedTick, setPreparedTick] = useState(0);
 
   const loadTranslations = useCallback(async () => {
     try {
@@ -32,10 +34,11 @@ function BibleConsole() {
       <LiveControl live={live} translations={translations} />
       <div className="grid gap-8 lg:grid-cols-12">
         <div className="lg:col-span-5">
-          <PreparedList translations={translations} defaultCode={defaultCode} onLoad={setDraft} />
+          <PreparedList translations={translations} defaultCode={defaultCode} onLoad={setDraft} date={date} setDate={setDate} tick={preparedTick} />
         </div>
         <div className="lg:col-span-7">
-          <Composer translations={translations} defaultCode={defaultCode} draft={draft} setDraft={setDraft} />
+          <Composer translations={translations} defaultCode={defaultCode} draft={draft} setDraft={setDraft}
+            serviceDate={date} onPrepared={() => setPreparedTick((t) => t + 1)} />
         </div>
       </div>
       <TranslationManager translations={translations} defaultCode={defaultCode} reload={loadTranslations} />
