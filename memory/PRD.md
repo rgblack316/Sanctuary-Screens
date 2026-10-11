@@ -88,6 +88,12 @@ See original problem statement; acceptance criteria listed there.
 - New collections included in backups; README updated with all recent features
 - Testing: iteration_13 passed (backend 17/17, frontend 100%)
 
+## Implemented (2026-10-11, iteration 15)
+- Edit/rename library slides (pencil -> "Edit library slide" dialog, PUT /api/bible/library/{id}); list stays alphabetical
+- Prepared items added from the library store library_id; editing the library slide updates those prepared items too
+- Testing: iteration_14 passed (backend 7/7, frontend 100%)
+
+
 
 
 ## Backlog

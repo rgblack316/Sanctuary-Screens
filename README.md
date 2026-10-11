@@ -94,7 +94,7 @@ A translation can't be deleted while it is on the live display or if it is the l
 - **Custom slide** tab (Compose panel): a title plus optional text – no scripture lookup. A line containing only `---` starts a new slide (e.g. a set of announcements stepped through with Next/Prev). The title uses the Scripture Reference style and the text uses the Verse Text style; no translation label is shown.
 - **Hymn shortcut** (same tab): enter number, title and page and pick a hymnal → title line `Amazing Grace`, text `Hymn 245 · Page 312` with the hymnal name below. Hymnal names are saved for the drop-down (add / delete them there) and the last one used is remembered.
 - **Save to prepared list** adds whatever is in the preview (scripture, reference only, manual text or custom slide) to the service date selected in the Prepared panel. The Prepared panel's Add dialog also has Scripture / Custom slide tabs.
-- **Save to library** keeps a slide for reuse (e.g. Welcome, Offering, Doxology). In the **Slide library** panel each saved slide has Preview, Go live and Add to the selected service date.
+- **Save to library** keeps a slide for reuse (e.g. Welcome, Offering, Doxology). In the **Slide library** panel each saved slide has Preview, Go live, Add to the selected service date, Edit (rename or change its content) and Delete. Editing a library slide also updates the copies already added to service dates.
 
 ## Operating during a service
 
