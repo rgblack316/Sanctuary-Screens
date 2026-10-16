@@ -70,7 +70,7 @@ ensure_prereqs() {
 }
 
 echo "Sanctuary Screens installer → $INSTALL_DIR"
-ensure)_prereqs
+ensure_prereqs
 
 # 1. Get the code
 if [ -d "$INSTALL_DIR/.git" ]; then
