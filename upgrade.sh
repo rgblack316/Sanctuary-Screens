@@ -21,7 +21,10 @@ done
 [ -f .env ] || die "No .env found. This looks like a fresh machine – run ./install.sh first."
 check_deps
 BRANCH="${BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
-PREV=$(git rev-parse HEAD)
+if [ "$BRANCH" = "HEAD" ]; then
+  die "Repository is on a detached HEAD (a rollback?). Run: git checkout main && ./upgrade.sh"
+fi
+PREV="${UPGRADE_PREV:-$(git rev-parse HEAD)}"
 STAMP=$(date +%Y%m%d-%H%M%S)
 
 # 1. Back up configuration (data lives in the Docker volume and is never touched)
@@ -43,6 +46,7 @@ if [ $PULL -eq 1 ] && [ $REEXEC -eq 0 ]; then
   else ok "Updated $(git rev-parse --short "$PREV") → $(git rev-parse --short HEAD)"; fi
   if [ "$(sha1sum upgrade.sh scripts/common.sh | sha1sum)" != "$SELF_SUM" ]; then
     info "Upgrade script changed – continuing with the new version"
+    export UPGRADE_PREV="$PREV"
     exec bash ./upgrade.sh --reexec "$@"
   fi
 fi
