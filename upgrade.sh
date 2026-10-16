@@ -21,7 +21,7 @@ done
 [ -f .env ] || die "No .env found. This looks like a fresh machine – run ./install.sh first."
 check_deps
 BRANCH="${BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
-if [ "$BRANCH" = "HEAD" ]; then
+if [ "$BRANCH" = "HEAD" ] && [ $PULL -eq 1 ]; then
   die "Repository is on a detached HEAD (a rollback?). Run: git checkout main && ./upgrade.sh"
 fi
 PREV="${UPGRADE_PREV:-$(git rev-parse HEAD)}"
