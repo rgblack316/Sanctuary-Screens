@@ -23,7 +23,54 @@ bootstrap_common() {
   fi
 }
 
+ensure_prereqs() {
+  local SUDO=""
+  [ "$(id -u)" -ne 0 ] && SUDO="sudo"
+
+  pkg_install() {
+    if command -v apt-get >/dev/null 2>&1; then
+      $SUDO apt-get update -y && $SUDO apt-get install -y "$@"
+    elif command -v dnf >/dev/null 2>&1; then
+      $SUDO dnf install -y "$@"
+    else
+      echo "✘ Unsupported package manager. Please install: $*" >&2; exit 1
+    fi
+  }
+
+  # git + curl
+  for tool in git curl; do
+    command -v "$tool" >/dev/null 2>&1 || { echo "==> $tool not found, installing..."; pkg_install "$tool" ca-certificates; }
+  done
+
+  # Docker Engine (official convenience script; also installs the Compose plugin)
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "==> Docker not found, installing (this needs internet and takes a minute or two)..."
+    curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+    $SUDO sh /tmp/get-docker.sh
+    rm -f /tmp/get-docker.sh
+  fi
+
+  # Start the daemon now and on boot
+  if command -v systemctl >/dev/null 2>&1; then
+    $SUDO systemctl enable --now docker >/dev/null 2>&1 || true
+  fi
+
+  # Compose plugin fallback (package name differs by distro)
+  if ! docker compose version >/dev/null 2>&1 && ! command -v docker-compose >/dev/null 2>&1; then
+    echo "==> Installing Docker Compose plugin..."
+    pkg_install docker-compose-plugin 2>/dev/null || pkg_install docker-compose-v2 || true
+  fi
+
+  # Wait for the daemon to answer
+  local i
+  for i in $(seq 1 20); do
+    $SUDO docker info >/dev/null 2>&1 && break
+    sleep 1
+  done
+}
+
 echo "Sanctuary Screens installer → $INSTALL_DIR"
+ensure)_prereqs
 
 # 1. Get the code
 if [ -d "$INSTALL_DIR/.git" ]; then
