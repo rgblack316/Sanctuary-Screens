@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # First-time install of Sanctuary Screens on the church NUC.
-#   curl -fsSL https://raw.githubusercontent.com/rgblack316/Sanctuary-Screens/main/install.sh -o install.sh && bash install.sh
+#   curl -fsSL https://raw.githubusercontent.com/rgblack316/Sanctuary-Screens/main/install.sh -o install.sh && sudo bash install.sh
 # Options (env vars): INSTALL_DIR (default /opt/sanctuary-screens), REPO_URL, BRANCH (default main)
+# To install a different branch (e.g. dev), pass it explicitly - downloading the script from that branch is not enough:
+#   sudo BRANCH=dev bash install.sh
 set -euo pipefail
 
 REPO_URL="${REPO_URL:-https://github.com/rgblack316/Sanctuary-Screens.git}"
@@ -69,7 +71,7 @@ ensure_prereqs() {
   done
 }
 
-echo "Sanctuary Screens installer → $INSTALL_DIR"
+echo "Sanctuary Screens installer → $INSTALL_DIR (branch: $BRANCH; set BRANCH=... to change)"
 ensure_prereqs
 
 # 1. Get the code

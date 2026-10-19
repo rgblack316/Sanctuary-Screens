@@ -46,8 +46,10 @@ class ChangePinIn(BaseModel):
 
 
 def client_ip(request: Request) -> str:
-    fwd = request.headers.get("x-forwarded-for")
-    return fwd.split(",")[0].strip() if fwd else (request.client.host if request.client else "unknown")
+    # uvicorn --proxy-headers only honours X-Forwarded-For from the local nginx (127.0.0.1),
+    # so request.client is the real client address. Never read the raw header: a client
+    # talking to the backend directly could spoof it to dodge the PIN lockout.
+    return request.client.host if request.client else "unknown"
 
 
 async def check_pin(pin: str, request: Request) -> dict:

@@ -3,6 +3,11 @@ server {
     server_name _;
     client_max_body_size 64m;
     root /usr/share/nginx/html;
+    server_tokens off;
+
+    # nginx drops server-level add_header in any location that sets its own, so every
+    # location that adds headers includes this snippet too.
+    include /etc/nginx/snippets/security-headers.conf;
 
     location /api/ws/ {
         proxy_pass http://127.0.0.1:${BACKEND_PORT};
@@ -25,10 +30,12 @@ server {
     location /static/ {
         expires 30d;
         add_header Cache-Control "public, immutable";
+        include /etc/nginx/snippets/security-headers.conf;
     }
 
     location / {
         try_files $uri /index.html;
         add_header Cache-Control "no-cache";
+        include /etc/nginx/snippets/security-headers.conf;
     }
 }
