@@ -104,6 +104,18 @@ A translation can't be deleted while it is on the live display or if it is the l
 
 Displays reconnect automatically after a backend restart or network blip and re-sync the current state.
 
+## Display kiosks (auto-start Chromium)
+
+Run this once on each display machine (Ubuntu, Ubuntu Server, Debian or Raspberry Pi OS; no desktop needed). It installs a minimal X + Chromium, creates a locked-down `kiosk` user that auto-logs in on the screen, and opens the display full screen on boot. Chromium waits until the NUC answers, restarts itself if it crashes, and the screen never blanks or shows a cursor.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/rgblack316/Sanctuary-Screens/main/kiosk/setup-kiosk.sh -o setup-kiosk.sh
+sudo bash setup-kiosk.sh --server <nuc-ip> --display bible      # or --display register
+sudo reboot
+```
+
+Options: `--url <full url>`, `--port 8091`, `--rotate left|right|inverted` (portrait screens), `--reboot-at 04:00` (daily reboot), `--uninstall`. Run without options to be prompted. To change what a screen shows, edit `/etc/sanctuary-kiosk.conf` and reboot. SSH still works normally for maintenance. If the machine had a desktop login screen, it now boots to console mode (`--uninstall` restores it).
+
 ## Backups
 
 `/settings-admin` → **Backups** tab:
