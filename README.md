@@ -28,7 +28,8 @@ Requirements: Git, Docker Engine and the Docker Compose plugin (the script check
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/rgblack316/Sanctuary-Screens/main/install.sh -o install.sh
-sudo bash install.sh            # installs to /opt/sanctuary-screens
+sudo bash install.sh            # installs to /opt/sanctuary-screens (main branch)
+# test a different branch:  sudo BRANCH=dev bash install.sh
 # or: git clone https://github.com/rgblack316/Sanctuary-Screens.git && cd Sanctuary-Screens && ./install.sh
 ```
 
