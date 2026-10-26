@@ -18,7 +18,7 @@ const COLOR_LABELS = {
   register: { text_color: "Numbers", accent_color: "This-week labels", muted_color: "Secondary text", panel_color: "Tiles" },
 };
 const KEYS = ["background_color", "text_color", "accent_color", "muted_color", "panel_color", "panel_opacity",
-  "image_blur", "image_dim", "image_motion", "motion_speed", "church_name_show", "church_name_position",
+  "image_blur", "image_dim", "image_motion", "motion_speed", "church_name_show", "church_name_hide_on_slides", "church_name_position",
   "church_name_size", "church_name_color", "church_name_uppercase", "church_logo_show", "church_logo_size",
   "translation_show", "translation_position", "reference_size", "verse_size"];
 const same = (a, b) => a && b && KEYS.every((k) => a[k] === b[k]);
@@ -86,7 +86,7 @@ export const AppearanceEditor = ({ display }) => {
           settings={Object.fromEntries(KEYS.map((k) => [k, form[k]]))}
           onApplied={(data) => { setSaved(data.appearance); setForm(data.appearance); }}
         />
-        <ChurchNamePanel name={name} setName={setName} logoUrl={logoUrl} setLogoUrl={setLogoUrl} form={form} set={set} />
+        <ChurchNamePanel display={display} name={name} setName={setName} logoUrl={logoUrl} setLogoUrl={setLogoUrl} form={form} set={set} />
         {display === "bible" && <ReferencePanel form={form} set={set} />}
         {display === "bible" && <TranslationLabelPanel form={form} set={set} />}
         <Panel title="Colors" testid="colors-panel">

@@ -6,7 +6,7 @@ import { ImageField } from "@/components/settings/ImageField";
 
 const POSITIONS = ["top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right"];
 
-export const ChurchNamePanel = ({ name, setName, logoUrl, setLogoUrl, form, set }) => (
+export const ChurchNamePanel = ({ display, name, setName, logoUrl, setLogoUrl, form, set }) => (
   <Panel title="Church name & logo" testid="church-name-panel">
     <div className="space-y-5">
       <label className="block">
@@ -37,6 +37,13 @@ export const ChurchNamePanel = ({ name, setName, logoUrl, setLogoUrl, form, set 
         Show on this display
         <Switch checked={form.church_name_show} onCheckedChange={set("church_name_show")} data-testid="church-name-show-switch" />
       </label>
+      {display === "bible" && (
+        <label className={`flex items-center gap-2 text-sm text-slate-300 ${form.church_name_show ? "" : "opacity-40 pointer-events-none"}`}>
+          <input type="checkbox" checked={!!form.church_name_hide_on_slides} onChange={(e) => set("church_name_hide_on_slides")(e.target.checked)}
+            data-testid="church-name-hide-on-slides" className="h-4 w-4 accent-amber-500" />
+          Hide on verse &amp; custom slides (still shown on the idle slide)
+        </label>
+      )}
       <div className={form.church_name_show ? "space-y-5" : "space-y-5 opacity-40 pointer-events-none"}>
         <div>
           <p className="mb-2 text-sm text-slate-300">Position</p>

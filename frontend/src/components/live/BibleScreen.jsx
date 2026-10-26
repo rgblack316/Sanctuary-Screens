@@ -71,7 +71,6 @@ function FitText({ text, reference, scale = 1, refSize, custom }) {
 
 const IdleSlide = ({ idle, appearance, churchName, logoUrl }) => (
   <div className="bible-screen items-center justify-center text-center" data-testid="bible-idle-slide">
-    <DisplayBackground appearance={appearance} />
     {idle?.image_url && (
       <img src={assetUrl(idle.image_url)} alt="" data-testid="bible-idle-image" className="absolute inset-0 h-full w-full object-cover" />
     )}
@@ -81,7 +80,6 @@ const IdleSlide = ({ idle, appearance, churchName, logoUrl }) => (
 
 const PreviewEmpty = ({ appearance }) => (
   <div className="bible-screen items-center justify-center text-center" data-testid="preview-empty">
-    <DisplayBackground appearance={appearance} />
     <p className="relative z-10 max-w-[70vmin] text-[3.2vmin] text-slate-300">
       Nothing in preview yet.<br /><span className="text-slate-500">Look up or load a slide in Bible Admin and it will appear here.</span>
     </p>
@@ -96,20 +94,22 @@ export function BibleScreen({ channel = "bible" }) {
   const appearance = preview?.appearance || live?.appearance;
   const churchName = preview ? preview.church_name : live?.church_name;
   const logoUrl = preview ? preview.church_logo_url : live?.church_logo_url;
+  const hideName = !!appearance?.church_name_hide_on_slides;
   const active = data?.mode === "passage" && data.slide;
 
   return (
-    <div className="relative" data-testid={isPreview ? "bible-preview" : "bible-display"} data-mode={active ? "passage" : "idle"} style={appearanceVars(appearance)}>
+    <div className="bible-root relative" data-testid={isPreview ? "bible-preview" : "bible-display"} data-mode={active ? "passage" : "idle"} style={appearanceVars(appearance)}>
+      {/* One persistent background so the parallax drift never restarts when switching slides. */}
+      <DisplayBackground appearance={appearance} />
       {active ? (
         <div className="bible-screen">
-          <DisplayBackground appearance={appearance} />
-          <ChurchName name={churchName} logoUrl={logoUrl} appearance={appearance} place="top" />
+                {!hideName && <ChurchName name={churchName} logoUrl={logoUrl} appearance={appearance} place="top" />}
           <SlideMeta place="top" appearance={appearance} translationCode={data.translation_code} />
           <FitText text={data.slide.verse_text} reference={data.slide.reference_label}
             scale={0.6 + (appearance?.verse_size ?? 5) * 0.08} refSize={appearance?.reference_size} custom={data.source_type === "custom"} />
           <SlideMeta place="bottom" appearance={appearance} translationCode={data.translation_code}
             counter={data.total > 1 ? `${data.slide_index + 1} / ${data.total}` : null} />
-          <div className="mt-[2vmin]"><ChurchName name={churchName} logoUrl={logoUrl} appearance={appearance} place="bottom" /></div>
+          {!hideName && <div className="mt-[2vmin]"><ChurchName name={churchName} logoUrl={logoUrl} appearance={appearance} place="bottom" /></div>}
         </div>
       ) : isPreview ? (
         <PreviewEmpty appearance={appearance} />

@@ -86,6 +86,8 @@ Optional columns: `book_abbrev`, `testament`, `reference`. Book names are normal
 
 A translation can't be deleted while it is on the live display or if it is the last one installed.
 
+Bible display tip: in `/settings-admin` → Bible → *Church name & logo*, tick **Hide on verse & custom slides** to show the church name only on the idle slide. The background image (including the parallax drift) stays continuous when switching between the idle slide and verses instead of restarting.
+
 ## Reference formats
 
 `Romans 6:23`, `Rom 6:23-25`, `Psalm 23`, `John 3:16-4:2` (cross-chapter), `John 3-4`, `1 Jn 1:9,10`, `Romans 6:23; 8:1`. Every verse becomes its own slide (max 300 per passage). If a lookup fails, use the Manual text tab – blank lines separate slides. Tick **Reference only** on the lookup tab to show just the reference (e.g. `John 3:16-18`) on a single slide, without the verse text.
