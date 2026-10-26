@@ -12,7 +12,6 @@ import { LibrarySuggest } from "@/components/bible/LibrarySuggest";
 const songLine = (s) => [`Page ${s.page}`, s.number ? `#${s.number}` : "", s.songbook].filter(Boolean).join(" · ");
 
 export const HymnForm = ({ setDraft, suggest, songbooksTick }) => {
-  const [number, setNumber] = useState("");
   const [title, setTitle] = useState("");
   const [page, setPage] = useState("");
   const [hymnal, setHymnal] = useState("");
@@ -40,14 +39,14 @@ export const HymnForm = ({ setDraft, suggest, songbooksTick }) => {
   const remember = (name) => bibleApi.put("/bible/hymnals/last", { name }).catch(() => {});
 
   const build = () => {
-    if (!number.trim() && !title.trim()) return toast.error("Enter a hymn number or title.");
-    setDraft(hymnDraft({ number, title, page, hymnal }));
+    if (!title.trim()) return toast.error("Enter a song title.");
+    setDraft(hymnDraft({ title, page, hymnal }));
     remember(hymnal);
   };
 
   const choose = (s) => {
-    setNumber(s.number || ""); setTitle(s.title); setPage(s.page); setHymnal(s.songbook);
-    setDraft(hymnDraft({ number: s.number || "", title: s.title, page: s.page, hymnal: s.songbook }));
+    setTitle(s.title); setPage(s.page); setHymnal(s.songbook);
+    setDraft(hymnDraft({ title: s.title, page: s.page, hymnal: s.songbook }));
     remember(s.songbook);
     setLookup(""); setHits(null);
   };
@@ -97,8 +96,7 @@ export const HymnForm = ({ setDraft, suggest, songbooksTick }) => {
       </div>
 
       <p className="label-caps pt-1">Or enter it yourself</p>
-      <div className="grid gap-2 sm:grid-cols-[110px_1fr_110px]">
-        <Input value={number} onChange={(e) => setNumber(e.target.value)} placeholder="Number" maxLength={12} data-testid="hymn-number-input" className="h-11 bg-[#0B0E14]" />
+      <div className="grid gap-2 sm:grid-cols-[1fr_110px]">
         <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title, e.g. Amazing Grace" maxLength={160} data-testid="hymn-title-input" className="h-11 bg-[#0B0E14]" />
         <Input value={page} onChange={(e) => setPage(e.target.value)} placeholder="Page" maxLength={12} data-testid="hymn-page-input" className="h-11 bg-[#0B0E14]" />
       </div>

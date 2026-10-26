@@ -28,7 +28,7 @@ const CustomFields = ({ form, set }) => (
   <>
     <Input value={form.reference} onChange={(e) => set("reference")(e.target.value)} placeholder={form.kind === "hymn" ? "Song title, e.g. Amazing Grace" : "Title, e.g. Welcome and announcements"} maxLength={200} data-testid="prepared-custom-title-input" className="bg-[#0B0E14]" />
     <Input value={form.title_or_note} onChange={(e) => set("title_or_note")(e.target.value)} placeholder="Note (optional, not shown on screen)" maxLength={120} data-testid="prepared-custom-note-input" className="bg-[#0B0E14]" />
-    <Textarea value={form.preloaded_text_optional} onChange={(e) => set("preloaded_text_optional")(e.target.value)} rows={5} placeholder={form.kind === "hymn" ? "e.g. Hymn 45 · Page 112\nBaptist Hymnal" : "Optional text.\nA line with only --- starts a new slide."} data-testid="prepared-custom-body-input" className="bg-[#0B0E14]" />
+    <Textarea value={form.preloaded_text_optional} onChange={(e) => set("preloaded_text_optional")(e.target.value)} rows={5} placeholder={form.kind === "hymn" ? "e.g. Page 112\nBaptist Hymnal" : "Optional text.\nA line with only --- starts a new slide."} data-testid="prepared-custom-body-input" className="bg-[#0B0E14]" />
   </>
 );
 

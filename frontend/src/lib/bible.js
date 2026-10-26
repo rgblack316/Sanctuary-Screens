@@ -27,10 +27,10 @@ export function customDraft(title, body = "") {
   };
 }
 
-export function hymnDraft({ number, title, page, hymnal }) {
-  const n = number.trim(), t = title.trim(), p = page.trim();
-  const line = [t && n ? `Hymn ${n}` : "", p ? `Page ${p}` : ""].filter(Boolean).join(" · ");
-  return { ...customDraft(t || `Hymn ${n}`, [line, hymnal.trim()].filter(Boolean).join("\n")), hymn: true };
+export function hymnDraft({ title, page, hymnal }) {
+  const t = title.trim(), p = page.trim();
+  const line = p ? `Page ${p}` : "";
+  return { ...customDraft(t, [line, hymnal.trim()].filter(Boolean).join("\n")), hymn: true };
 }
 
 // The three kinds of slide kept in prepared lists and in the library.
