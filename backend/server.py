@@ -31,6 +31,7 @@ log = logging.getLogger("sanctuary")
 MAX_ATTEMPTS = 5
 LOCK_MINUTES = 5
 MAX_LOCK_MINUTES = 24 * 60
+MAX_WS_PER_CHANNEL = 100
 
 app = FastAPI(title="Sanctuary Screens")
 api = APIRouter(prefix="/api")
@@ -186,6 +187,9 @@ async def ws_endpoint(ws: WebSocket, channel: str):
     if channel not in hub.channels:
         await ws.close(code=4404)
         return
+    if len(hub.channels[channel]) >= MAX_WS_PER_CHANNEL:  # displays are a handful of screens, not hundreds
+        await ws.close(code=1013)
+        return
     await hub.connect(channel, ws)
     try:
         await ws.send_text(json.dumps({"type": "state", "data": await STATE_FN[channel]()}))
@@ -203,13 +207,13 @@ async def ws_endpoint(ws: WebSocket, channel: str):
         hub.drop(channel, ws)
 
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=False,
-    allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# The browser always talks to the app through nginx on one origin, so CORS is not needed in production.
+# Only an explicit list of origins (for a separate dev server) enables it; "*" is deliberately ignored,
+# otherwise any web page open on a LAN device could call the API.
+CORS_ORIGINS = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip() and o.strip() != "*"]
+if CORS_ORIGINS:
+    app.add_middleware(CORSMiddleware, allow_credentials=False, allow_origins=CORS_ORIGINS,
+                       allow_methods=["*"], allow_headers=["*"])
 
 
 # ---------- startup: indexes, migrations, PIN, seed ----------
@@ -274,6 +278,7 @@ async def startup():
     await ensure_indexes()
     await run_migrations()
     await ensure_pin()
+    await backup.encrypt_legacy_smtp_password()
     asyncio.create_task(seed_translations())
     asyncio.create_task(backup.scheduler_loop())
 

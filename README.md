@@ -121,8 +121,8 @@ Options: `--url <full url>`, `--port 8091`, `--rotate left|right|inverted` (port
 
 `/settings-admin` → **Backups** tab:
 - **Back up now** and a weekly automatic backup (choose day, time and how many to keep). Backups are gzip files in the `backups/` folder of the install (mounted into the backend), containing register records, translations, prepared lists, slide library, hymnal names, display settings, looks and images (not the PIN).
-- Download, delete or restore any backup, or restore from an uploaded backup file (restore replaces current data – confirm required).
-- Optional email of each backup using your own SMTP account (e.g. Gmail: `smtp.gmail.com`, port 587, STARTTLS, Google app password). Use **Send test email** to check. Email needs internet on the NUC; local backups do not.
+- Download, delete or restore any backup, or restore from an uploaded backup file (restore replaces current data – confirm required; the file is checked first, a safety backup of your current data is taken automatically, and it is put back if the restore fails).
+- Optional email of each backup using your own SMTP account (e.g. Gmail: `smtp.gmail.com`, port 587, STARTTLS, Google app password). The SMTP password is stored encrypted (the key comes from `JWT_SECRET` in `.env`, so changing `JWT_SECRET` means re-entering it); a username/password is not accepted with security set to "none". Use **Send test email** to check. Email needs internet on the NUC; local backups do not.
 - The schedule uses the NUC's local time (`/etc/localtime` is mounted into the backend).
 
 ## Useful commands

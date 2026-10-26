@@ -1,18 +1,5 @@
-import os
-from pathlib import Path
-
-# Load REACT_APP_BACKEND_URL from frontend/.env and MONGO_URL/DB_NAME from backend/.env
-def _load(envpath):
-    try:
-        for ln in Path(envpath).read_text().splitlines():
-            ln = ln.strip()
-            if not ln or ln.startswith("#") or "=" not in ln:
-                continue
-            k, v = ln.split("=", 1)
-            v = v.strip().strip('"').strip("'")
-            os.environ.setdefault(k.strip(), v)
-    except Exception:
-        pass
-
-_load("/app/frontend/.env")
-_load("/app/backend/.env")
+# Shared pytest configuration.
+#
+# The older test_iter*/test_sanctuary/test_library_* files are live-server tests: set REACT_APP_BACKEND_URL
+# (e.g. http://<nuc-ip>:8091) and they call that running stack over HTTP. test_security_hardening.py is
+# self-contained and needs no server.

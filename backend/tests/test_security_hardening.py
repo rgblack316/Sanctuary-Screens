@@ -2,7 +2,7 @@
 
 Runs against an in-memory MongoDB stand-in, so no running stack is needed:
     pip install mongomock-motor httpx pytest
-    cd backend && python -m pytest tests/test_security_hardening.py -n 0
+    cd backend && python -m pytest tests/test_security_hardening.py
 """
 import gzip
 import json
@@ -210,3 +210,66 @@ def test_decompression_bomb_and_oversize_upload_rejected(client, monkeypatch):
     monkeypatch.setattr(backup, "MAX_UPLOAD_BYTES", 10)
     r = client.post("/api/backup/restore-upload?confirm=true", headers=h, files={"file": ("b.gz", big)})
     assert r.status_code == 413 and _count(client) == 1
+
+
+# ---------- CORS, uploads, SMTP password ----------
+
+PNG = (b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89"
+       b"\x00\x00\x00\rIDATx\x9cc\xf8\xff\xff?\x00\x05\xfe\x02\xfe\xa7\x9a\xa0\xa0\x00\x00\x00\x00IEND\xaeB`\x82")
+
+
+def test_wildcard_cors_is_not_enabled(client):
+    r = client.get("/api/health", headers={"Origin": "http://evil.example"})
+    assert r.status_code == 200 and "access-control-allow-origin" not in r.headers
+
+
+def test_image_upload_checks_real_content(client):
+    h = _token(client)
+    fake = client.post("/api/appearance/logo", headers=h, files={"file": ("x.png", b"<script>alert(1)</script>", "image/png")})
+    assert fake.status_code == 415
+    ok = client.post("/api/appearance/logo", headers=h, files={"file": ("x.png", PNG, "image/jpeg")})
+    assert ok.status_code == 200  # type is detected from the bytes, not the label
+    img_id = ok.json()["church_logo_url"].rsplit("/", 1)[1]
+    assert client.get(f"/api/appearance/image/{img_id}").headers["content-type"] == "image/png"
+
+
+def _smtp_body(**kw):
+    return {"smtp_host": "mail.example", "smtp_port": 587, "smtp_security": "starttls", "smtp_user": "u",
+            "smtp_password": "hunter2-secret", "email_to": "a@b.c", **kw}
+
+
+def test_smtp_password_encrypted_at_rest_and_usable(client):
+    h = _token(client)
+    r = client.put("/api/backup/settings", headers=h, json=_smtp_body())
+    assert r.status_code == 200 and "smtp_password" not in r.json() and r.json()["has_password"] is True
+    stored = run(client, db.backup_settings.find_one, {"_id": "settings"})["smtp_password"]
+    assert stored.startswith("enc:v1:") and "hunter2" not in stored
+    assert run(client, backup.load_settings)["smtp_password"] == "hunter2-secret"
+
+
+def test_blank_password_on_save_keeps_existing(client):
+    h = _token(client)
+    client.put("/api/backup/settings", headers=h, json=_smtp_body())
+    client.put("/api/backup/settings", headers=h, json=_smtp_body(smtp_password=""))
+    assert run(client, backup.load_settings)["smtp_password"] == "hunter2-secret"
+
+
+def test_legacy_plaintext_password_is_migrated(client):
+    run(client, db.backup_settings.update_one, {"_id": "settings"}, {"$set": {"smtp_password": "old-plain"}})
+    run(client, backup.encrypt_legacy_smtp_password)
+    stored = run(client, db.backup_settings.find_one, {"_id": "settings"})["smtp_password"]
+    assert stored.startswith("enc:v1:")
+    assert run(client, backup.load_settings)["smtp_password"] == "old-plain"
+
+
+def test_undecryptable_password_is_treated_as_unset(client):
+    run(client, db.backup_settings.update_one, {"_id": "settings"}, {"$set": {"smtp_password": "enc:v1:garbage"}})
+    assert run(client, backup.load_settings)["smtp_password"] == ""
+
+
+def test_credentials_over_unencrypted_smtp_rejected(client):
+    h = _token(client)
+    r = client.put("/api/backup/settings", headers=h, json=_smtp_body(smtp_security="none"))
+    assert r.status_code == 422
+    assert client.put("/api/backup/settings", headers=h,
+                      json=_smtp_body(smtp_security="none", smtp_user="", smtp_password="")).status_code == 200

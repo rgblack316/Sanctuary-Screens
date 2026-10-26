@@ -1,5 +1,7 @@
 import asyncio
+import base64
 import gzip
+import hashlib
 import logging
 import os
 import re
@@ -12,11 +14,12 @@ from pathlib import Path
 from typing import Literal
 
 from bson import json_util
+from cryptography.fernet import Fernet, InvalidToken
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from core import ROOT_DIR, SETTINGS_AUTH, db, hub, now_iso
+from core import ENV_JWT_SECRET, ROOT_DIR, SETTINGS_AUTH, db, hub, now_iso
 
 log = logging.getLogger("sanctuary.backup")
 router = APIRouter(prefix="/backup", dependencies=[SETTINGS_AUTH])
@@ -28,6 +31,40 @@ COLLECTIONS = ["register_services", "register_state", "bible_translations", "bib
 MAX_ATTACH = 20 * 1024 * 1024
 MAX_UPLOAD_BYTES = 200 * 1024 * 1024    # compressed backup file
 MAX_RESTORE_BYTES = 1024 * 1024 * 1024  # after decompression
+ENC_PREFIX = "enc:v1:"
+
+
+def _fernet() -> Fernet:
+    # Key comes from .env (not stored in the database), so a copy of the database alone does not
+    # reveal the SMTP password. Changing JWT_SECRET in .env makes the saved password unreadable;
+    # it is then treated as "not set" and has to be typed in again.
+    key = hashlib.sha256(b"sanctuary-screens/smtp-password/v1:" + ENV_JWT_SECRET.encode()).digest()
+    return Fernet(base64.urlsafe_b64encode(key))
+
+
+def encrypt_secret(plain: str) -> str:
+    return ENC_PREFIX + _fernet().encrypt(plain.encode()).decode() if plain else ""
+
+
+def decrypt_secret(stored: str) -> str:
+    if not stored:
+        return ""
+    if not stored.startswith(ENC_PREFIX):  # legacy plain text, encrypted on next startup/save
+        return stored
+    try:
+        return _fernet().decrypt(stored[len(ENC_PREFIX):].encode()).decode()
+    except InvalidToken:
+        log.warning("Saved SMTP password cannot be decrypted (JWT_SECRET changed?). Re-enter it in Settings.")
+        return ""
+
+
+async def encrypt_legacy_smtp_password():
+    """One-time migration: older versions stored the SMTP password in plain text."""
+    doc = await db.backup_settings.find_one({"_id": "settings"}) or {}
+    pw = doc.get("smtp_password")
+    if pw and not pw.startswith(ENC_PREFIX):
+        await db.backup_settings.update_one({"_id": "settings"}, {"$set": {"smtp_password": encrypt_secret(pw)}})
+        log.info("Encrypted the saved SMTP password")
 
 
 class BackupSettingsIn(BaseModel):
@@ -47,7 +84,8 @@ class BackupSettingsIn(BaseModel):
 
 async def load_settings() -> dict:
     doc = await db.backup_settings.find_one({"_id": "settings"}) or {}
-    data = BackupSettingsIn(**{k: doc[k] for k in BackupSettingsIn.model_fields if k in doc}).model_dump()
+    data = BackupSettingsIn(**{k: doc[k] for k in BackupSettingsIn.model_fields if k != "smtp_password" and k in doc}).model_dump()
+    data["smtp_password"] = decrypt_secret(doc.get("smtp_password", ""))
     data.update(last_run=doc.get("last_run"), last_auto_date=doc.get("last_auto_date"))
     return data
 
@@ -209,7 +247,11 @@ async def get_settings():
 @router.put("/settings")
 async def put_settings(body: BackupSettingsIn):
     data = body.model_dump()
-    if not data["smtp_password"]:
+    if data["smtp_security"] == "none" and (data["smtp_user"] or data["smtp_password"]):
+        raise HTTPException(422, "Do not send a username or password without encryption. Choose STARTTLS or SSL.")
+    if data["smtp_password"]:
+        data["smtp_password"] = encrypt_secret(data["smtp_password"])
+    else:
         data.pop("smtp_password")
     await db.backup_settings.update_one({"_id": "settings"}, {"$set": data}, upsert=True)
     return _public(await load_settings())
