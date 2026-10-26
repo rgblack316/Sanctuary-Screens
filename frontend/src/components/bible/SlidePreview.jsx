@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Check, Pencil } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
-function SlideRow({ slide, index, onChange, allowEmpty }) {
+function SlideRow({ slide, index, onChange, allowEmpty, active, onSelect }) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(slide.verse_text);
 
@@ -12,9 +12,16 @@ function SlideRow({ slide, index, onChange, allowEmpty }) {
   };
 
   return (
-    <li className="rounded-lg border border-[#222B3E] bg-[#0B0E14] p-4" data-testid={`preview-slide-${index}`}>
+    <li className={`rounded-lg border bg-[#0B0E14] p-4 ${active ? "border-amber-500/60" : "border-[#222B3E]"}`} data-testid={`preview-slide-${index}`} data-active={active ? "true" : "false"}>
       <div className="flex items-center gap-3">
-        <span className="font-mono-ui text-xs text-slate-500">{String(index + 1).padStart(2, "0")}</span>
+        {onSelect ? (
+          <button type="button" onClick={() => onSelect(index)} title="Show this slide on /bible-preview" data-testid={`preview-slide-select-${index}`}
+            className={`font-mono-ui rounded px-1.5 py-0.5 text-xs transition-colors ${active ? "bg-amber-500 font-bold text-[#090B10]" : "text-slate-500 hover:bg-[#1A202C] hover:text-amber-300"}`}>
+            {String(index + 1).padStart(2, "0")}
+          </button>
+        ) : (
+          <span className="font-mono-ui text-xs text-slate-500">{String(index + 1).padStart(2, "0")}</span>
+        )}
         <span className="font-display text-sm font-bold uppercase tracking-widest text-amber-400">{slide.reference_label}</span>
         <button
           type="button"
@@ -35,13 +42,13 @@ function SlideRow({ slide, index, onChange, allowEmpty }) {
   );
 }
 
-export const SlidePreview = ({ draft, setDraft }) => {
+export const SlidePreview = ({ draft, setDraft, activeIndex, onSelect }) => {
   const update = (i, text) =>
     setDraft({ ...draft, verses: draft.verses.map((v, j) => (j === i ? { ...v, verse_text: text } : v)) });
   return (
     <ul className="max-h-[420px] space-y-2 overflow-y-auto pr-1" data-testid="slide-preview-list">
       {draft.verses.map((s, i) => (
-        <SlideRow key={`${draft.normalized_reference}-${i}-${s.reference_label}`} slide={s} index={i} onChange={update} allowEmpty={draft.source_type !== "manual" && draft.source_type !== "local_lookup"} />
+        <SlideRow key={`${draft.normalized_reference}-${i}-${s.reference_label}`} slide={s} index={i} onChange={update} allowEmpty={draft.source_type !== "manual" && draft.source_type !== "local_lookup"} active={activeIndex === i} onSelect={onSelect} />
       ))}
     </ul>
   );

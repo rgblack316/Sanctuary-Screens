@@ -86,6 +86,8 @@ Optional columns: `book_abbrev`, `testament`, `reference`. Book names are normal
 
 A translation can't be deleted while it is on the live display or if it is the last one installed.
 
+Bible display tip: in `/settings-admin` → Bible → *Church name & logo*, tick **Hide on verse & custom slides** to show the church name only on the idle slide. The background image (including the parallax drift) stays continuous when switching between the idle slide and verses instead of restarting.
+
 ## Reference formats
 
 `Romans 6:23`, `Rom 6:23-25`, `Psalm 23`, `John 3:16-4:2` (cross-chapter), `John 3-4`, `1 Jn 1:9,10`, `Romans 6:23; 8:1`. Every verse becomes its own slide (max 300 per passage). If a lookup fails, use the Manual text tab – blank lines separate slides. Tick **Reference only** on the lookup tab to show just the reference (e.g. `John 3:16-18`) on a single slide, without the verse text.
@@ -93,9 +95,18 @@ A translation can't be deleted while it is on the live display or if it is the l
 ## Custom slides, hymns & slide library
 
 - **Custom slide** tab (Compose panel): a title plus optional text – no scripture lookup. A line containing only `---` starts a new slide (e.g. a set of announcements stepped through with Next/Prev). The title uses the Scripture Reference style and the text uses the Verse Text style; no translation label is shown.
-- **Hymn shortcut** (same tab): enter number, title and page and pick a hymnal → title line `Amazing Grace`, text `Hymn 245 · Page 312` with the hymnal name below. Hymnal names are saved for the drop-down (add / delete them there) and the last one used is remembered.
-- **Save to prepared list** adds whatever is in the preview (scripture, reference only, manual text or custom slide) to the service date selected in the Prepared panel. The Prepared panel's Add dialog also has Scripture / Custom slide tabs.
+- **Hymn shortcut** (same tab): enter title and page and pick a hymnal → title line `Amazing Grace`, text `Page 312` with the hymnal name below. Hymnal names are saved for the drop-down (add / delete them there) and the last one used is remembered.
+- **Save to prepared list** adds whatever is in the preview (scripture, reference only, manual text, hymn or custom slide) to the service date selected in the Prepared panel. The Prepared panel is split into **Scripture**, **Hymns** and **Custom** lists (tabs with counts); each list scrolls and has its own Move up/down. The Add dialog opens on the active tab.
 - **Save to library** keeps a slide for reuse (e.g. Welcome, Offering, Doxology). In the **Slide library** panel each saved slide has Preview, Go live, Add to the selected service date, Edit (rename or change its content) and Delete. Editing a library slide also updates the copies already added to service dates.
+- The library has a search box, Scripture / Hymn / Custom filters and pages of 25 (**Load more**). While you build a slide, matching library slides are suggested ("Use" or "Add to date"), and **Save to library** is disabled if a slide with that name already exists, so you don't create duplicates.
+
+## Hymnal lookup (CSV import)
+
+`/bible-admin` → **Songbooks** panel. Import a CSV with the columns `songbook,title,page` (optional `number`). Use **Download sample** for a template, **Validate** to check a file first, and choose **Replace** or **Add** when importing. In the Hymn tab, type a page or song number (or part of a title); if several songs share a page you get a list to pick from. Songbook names are added to the hymnal drop-down automatically. Songs are included in backups.
+
+## Bible preview
+
+`/bible-preview` (open on the LAN like `/bible`, no PIN) mirrors what you are building in `/bible-admin` – the current draft and the slide you select – with a "Preview · not on screen" badge. Nothing reaches `/bible` until you press **Send to screen**.
 
 ## Operating during a service
 

@@ -21,6 +21,7 @@ class AppearanceIn(BaseModel):
     image_motion: Literal["none", "parallax"] = "none"
     motion_speed: int = Field(4, ge=1, le=10)
     church_name_show: bool = True
+    church_name_hide_on_slides: bool = False
     church_name_position: Position = "top-center"
     church_name_size: int = Field(4, ge=1, le=10)
     church_name_color: str = Field("#F8FAFC", pattern=HEX)

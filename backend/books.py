@@ -26,14 +26,13 @@ BOOKS = [
 ]
 
 _ORD = {"first": "1", "second": "2", "third": "3", "1st": "1", "2nd": "2", "3rd": "3", "iii": "3", "ii": "2", "i": "1"}
-_ORD_RE = re.compile(r"^(first|second|third|1st|2nd|3rd|iii|ii|i)\s+(.*)$")
 
 
 def normalize(name: str) -> str:
     s = (name or "").strip().lower().replace(".", " ")
-    m = _ORD_RE.match(s)
-    if m:
-        s = _ORD[m.group(1)] + m.group(2)
+    parts = s.split(None, 1)  # linear-time; "first john" -> "1john"
+    if len(parts) == 2 and parts[0] in _ORD:
+        s = _ORD[parts[0]] + parts[1]
     return re.sub(r"[^a-z0-9]", "", s)
 
 

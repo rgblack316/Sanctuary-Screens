@@ -8,15 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { bibleApi, errMsg } from "@/lib/api";
-import { lookupDraft, manualDraft, preparedFromDraft, publishDraft, referenceOnlyDraft } from "@/lib/bible";
+import { draftFromPrepared, libraryNameFor, lookupDraft, manualDraft, preparedFromDraft, publishDraft, referenceOnlyDraft } from "@/lib/bible";
 import { CustomSlideForm } from "@/components/bible/CustomSlideForm";
 import { HymnForm } from "@/components/bible/HymnForm";
 import { TranslationSelect } from "@/components/bible/TranslationSelect";
 import { SlidePreview } from "@/components/bible/SlidePreview";
+import { LibrarySuggest } from "@/components/bible/LibrarySuggest";
 
 const KIND_LABEL = { manual: "manual", custom: "custom slide", reference_only: "reference only" };
 
-export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDate, onPrepared, onLibrary }) => {
+export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDate, onPrepared, onLibrary, libraryTick, songbooksTick, previewIndex, onSelectSlide }) => {
   const [refOnly, setRefOnly] = useState(false);
   const [tab, setTab] = useState("lookup");
   const [reference, setReference] = useState("");
@@ -25,6 +26,7 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
   const [manualLabel, setManualLabel] = useState("");
   const [manualText, setManualText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [dupName, setDupName] = useState(null); // the library slide this draft would duplicate, if any
 
   useEffect(() => { if (!code && defaultCode) setCode(defaultCode); }, [defaultCode, code]);
   useEffect(() => {
@@ -68,15 +70,47 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
   const saveLibrary = async () => {
     const { service_date, title_or_note, ...item } = preparedFromDraft(draft, serviceDate);
     try {
-      const suffix = { reference_only: " (reference only)", local_lookup: ` (${draft.translation_code})`, manual: " (manual)" }[draft.source_type] || "";
-      const name = `${draft.normalized_reference}${suffix}`;
+      const name = libraryNameFor(draft);
       await bibleApi.post("/bible/library", { ...item, name });
       toast.success(`${name} saved to the slide library`);
+      setDupName(name);
       onLibrary();
     } catch (err) {
       toast.error(errMsg(err));
     }
   };
+
+  // Slides found in the library while typing: load one into the composer, or add it straight to the service.
+  const useLibraryItem = async (item) => {
+    try {
+      setDraft(await draftFromPrepared(item, defaultCode));
+      toast.success(`${item.name} loaded from the library`);
+    } catch (err) {
+      toast.error(`${item.name}: ${errMsg(err)}`);
+    }
+  };
+  const addLibraryItem = async ({ id, name, created_at, exact, ...rest }) => {
+    try {
+      await bibleApi.post("/bible/prepared", { ...rest, title_or_note: name, service_date: serviceDate, library_id: id });
+      toast.success(`${name} added to ${serviceDate}`);
+      onPrepared();
+    } catch (err) {
+      toast.error(errMsg(err));
+    }
+  };
+  const suggest = { onUse: useLibraryItem, onAdd: addLibraryItem, date: serviceDate };
+
+  useEffect(() => {
+    if (!draft) { setDupName(null); return undefined; }
+    let off = false;
+    const wanted = libraryNameFor(draft).toLowerCase();
+    const t = setTimeout(() => {
+      bibleApi.get("/bible/library/match", { params: { text: draft.normalized_reference, limit: 20 } })
+        .then(({ data }) => { if (!off) setDupName(data.items.find((i) => i.name.toLowerCase() === wanted)?.name ?? null); })
+        .catch(() => {});
+    }, 200);
+    return () => { off = true; clearTimeout(t); };
+  }, [draft, libraryTick]);
 
   const publish = async () => {
     setBusy(true);
@@ -116,6 +150,7 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
             <Checkbox checked={refOnly} onCheckedChange={(v) => setRefOnly(!!v)} data-testid="reference-only-checkbox" />
             Reference only (show just the reference, no verse text)
           </label>
+          <LibrarySuggest text={reference} kind="scripture" translationCode={code} {...suggest} />
           {lookupError && (
             <div data-testid="lookup-error" className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-200">
               <AlertTriangle size={16} /> <span className="flex-1">{lookupError}</span>
@@ -126,11 +161,12 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
         <TabsContent value="manual" className="space-y-3">
           <Input value={manualLabel} onChange={(e) => setManualLabel(e.target.value)} placeholder="Reference label shown on screen" maxLength={120} data-testid="manual-label-input" className="h-11 bg-[#0B0E14]" />
           <Textarea value={manualText} onChange={(e) => setManualText(e.target.value)} rows={6} placeholder="Paste or type the text. Leave a blank line between slides." data-testid="manual-text-input" className="bg-[#0B0E14]" />
+          <LibrarySuggest text={manualLabel} kind="scripture" {...suggest} />
           <Button variant="secondary" onClick={buildManual} data-testid="manual-build-btn">Build slides</Button>
         </TabsContent>
         <TabsContent value="custom" className="space-y-5">
-          <HymnForm setDraft={setDraft} />
-          <CustomSlideForm setDraft={setDraft} />
+          <HymnForm setDraft={setDraft} suggest={suggest} songbooksTick={songbooksTick} />
+          <CustomSlideForm setDraft={setDraft} suggest={suggest} />
         </TabsContent>
       </Tabs>
 
@@ -141,8 +177,8 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
             <span className="text-xs text-slate-500" data-testid="draft-slide-count">
               {draft.verses.length} slide{draft.verses.length === 1 ? "" : "s"} · {[KIND_LABEL[draft.source_type], draft.translation_code].filter(Boolean).join(" · ")}
             </span>
-            <Button variant="outline" onClick={saveLibrary} data-testid="save-to-library-btn" className="ml-auto h-11">
-              <BookmarkPlus size={16} /> Save to library
+            <Button variant="outline" onClick={saveLibrary} disabled={!!dupName} title={dupName ? `Already saved as “${dupName}”` : undefined} data-testid="save-to-library-btn" className="ml-auto h-11">
+              <BookmarkPlus size={16} /> {dupName ? "In library" : "Save to library"}
             </Button>
             <Button variant="outline" onClick={savePrepared} data-testid="save-to-prepared-btn" className="h-11">
               <ListPlus size={16} /> Save to prepared list
@@ -154,7 +190,7 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
           {draft.warnings?.map((w) => (
             <p key={w} className="mb-2 flex items-center gap-2 text-xs text-amber-300" data-testid="draft-warning"><AlertTriangle size={12} /> {w}</p>
           ))}
-          <SlidePreview draft={draft} setDraft={setDraft} />
+          <SlidePreview draft={draft} setDraft={setDraft} activeIndex={previewIndex} onSelect={onSelectSlide} />
         </div>
       )}
     </Panel>

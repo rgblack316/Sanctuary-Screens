@@ -26,9 +26,9 @@ const ScriptureFields = ({ form, set, translations }) => (
 
 const CustomFields = ({ form, set }) => (
   <>
-    <Input value={form.reference} onChange={(e) => set("reference")(e.target.value)} placeholder="Title, e.g. Hymn 245 – Amazing Grace" maxLength={200} data-testid="prepared-custom-title-input" className="bg-[#0B0E14]" />
+    <Input value={form.reference} onChange={(e) => set("reference")(e.target.value)} placeholder={form.kind === "hymn" ? "Song title, e.g. Amazing Grace" : "Title, e.g. Welcome and announcements"} maxLength={200} data-testid="prepared-custom-title-input" className="bg-[#0B0E14]" />
     <Input value={form.title_or_note} onChange={(e) => set("title_or_note")(e.target.value)} placeholder="Note (optional, not shown on screen)" maxLength={120} data-testid="prepared-custom-note-input" className="bg-[#0B0E14]" />
-    <Textarea value={form.preloaded_text_optional} onChange={(e) => set("preloaded_text_optional")(e.target.value)} rows={5} placeholder={"Optional text, e.g. Page 312\nA line with only --- starts a new slide."} data-testid="prepared-custom-body-input" className="bg-[#0B0E14]" />
+    <Textarea value={form.preloaded_text_optional} onChange={(e) => set("preloaded_text_optional")(e.target.value)} rows={5} placeholder={form.kind === "hymn" ? "e.g. Page 112\nBaptist Hymnal" : "Optional text.\nA line with only --- starts a new slide."} data-testid="prepared-custom-body-input" className="bg-[#0B0E14]" />
   </>
 );
 
@@ -47,7 +47,7 @@ export const PreparedDialog = ({ item, translations, defaultCode, onClose, onSav
   });
   const [busy, setBusy] = useState(false);
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
-  const custom = form.kind === "custom";
+  const custom = form.kind !== "scripture"; // hymns and custom slides are both free-text slides
 
   const save = async () => {
     if (withName && !name.trim()) return toast.error("Name is required.");
@@ -81,6 +81,7 @@ export const PreparedDialog = ({ item, translations, defaultCode, onClose, onSav
         <Tabs value={form.kind} onValueChange={set("kind")}>
           <TabsList className="bg-[#0B0E14]">
             <TabsTrigger value="scripture" data-testid="prepared-kind-scripture">Scripture</TabsTrigger>
+            <TabsTrigger value="hymn" data-testid="prepared-kind-hymn">Hymn</TabsTrigger>
             <TabsTrigger value="custom" data-testid="prepared-kind-custom">Custom slide</TabsTrigger>
           </TabsList>
         </Tabs>

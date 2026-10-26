@@ -3,7 +3,7 @@ import { ExternalLink, Lock, Settings } from "lucide-react";
 import { WsStatus } from "@/components/live/WsStatus";
 import { lockArea } from "@/components/live/PinGate";
 
-export const AdminShell = ({ area, title, status, displayPath, children }) => (
+export const AdminShell = ({ area, title, status, displayPath, extraLinks = [], children }) => (
   <div className="min-h-screen bg-[#0B0E14] text-slate-100">
     <header className="sticky top-0 z-30 border-b border-[#222B3E] bg-[#0B0E14]/85 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-8">
@@ -33,6 +33,12 @@ export const AdminShell = ({ area, title, status, displayPath, children }) => (
             Open {displayPath} <ExternalLink size={12} />
           </a>
           )}
+          {extraLinks.map((l) => (
+            <a key={l.path} href={l.path} target="_blank" rel="noreferrer" data-testid={`open-${l.path.slice(1)}-link`}
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-md border border-[#222B3E] px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-sky-500/60 hover:text-sky-300 transition-colors">
+              {l.label} <ExternalLink size={12} />
+            </a>
+          ))}
           <button
             onClick={() => lockArea(area)}
             data-testid="lock-admin-btn"

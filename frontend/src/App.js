@@ -11,6 +11,7 @@ import Home from "@/pages/Home";
 import RegisterDisplay from "@/pages/RegisterDisplay";
 import RegisterAdmin from "@/pages/RegisterAdmin";
 import BibleDisplay from "@/pages/BibleDisplay";
+import BiblePreview from "@/pages/BiblePreview";
 import BibleAdmin from "@/pages/BibleAdmin";
 import SettingsAdmin from "@/pages/SettingsAdmin";
 
@@ -22,6 +23,7 @@ function App() {
         <Route path="/register" element={<RegisterDisplay />} />
         <Route path="/register-admin" element={<RegisterAdmin />} />
         <Route path="/bible" element={<BibleDisplay />} />
+        <Route path="/bible-preview" element={<BiblePreview />} />
         <Route path="/bible-admin" element={<BibleAdmin />} />
         <Route path="/settings-admin" element={<SettingsAdmin />} />
         <Route path="*" element={<Home />} />

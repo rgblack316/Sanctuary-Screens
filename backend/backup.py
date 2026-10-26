@@ -26,7 +26,7 @@ router = APIRouter(prefix="/backup", dependencies=[SETTINGS_AUTH])
 BACKUP_DIR = Path(os.environ.get("BACKUP_DIR", str(ROOT_DIR / "backups")))
 NAME_RE = re.compile(r"^sanctuary-backup-\d{8}-\d{6}\.json\.gz$")
 COLLECTIONS = ["register_services", "register_state", "bible_translations", "bible_verses", "bible_prepared",
-               "bible_library", "bible_hymnals",
+               "bible_library", "bible_hymnals", "hymnal_songs",
                "bible_settings", "display_appearance", "display_looks", "display_images", "site_settings"]
 MAX_ATTACH = 20 * 1024 * 1024
 MAX_UPLOAD_BYTES = 200 * 1024 * 1024    # compressed backup file

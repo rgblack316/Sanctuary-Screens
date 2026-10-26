@@ -1,9 +1,26 @@
 import re
 
-_HEAD = re.compile(
-    r"^\s*((?:[1-3]\s*|(?:iii|ii|i|first|second|third)\s+)?[a-z][a-z .']*?)\s*(\d[\d\s:.,;\-\u2013\u2014]*)\s*$",
-    re.I,
-)
+_NAME_CH = re.compile(r"[a-z .']*", re.I)
+_REST_OK = re.compile(r"[\d\s:.,;\-\u2013\u2014]+")
+
+
+def _split_head(text: str):
+    """Split 'John 3:16' into ('John', '3:16'). Linear-time (no backtracking regex)."""
+    s = (text or "").strip()
+    i = 0
+    if s[:1] in ("1", "2", "3"):  # numbered book: 1 John
+        i = 1
+        while i < len(s) and s[i].isspace():
+            i += 1
+    if i >= len(s) or not s[i].isalpha() or not s[i].isascii():
+        return None
+    j = _NAME_CH.match(s, i).end()
+    rest = s[j:]
+    if not rest[:1].isdigit() or not _REST_OK.fullmatch(rest):
+        return None
+    return s[:j].strip(), rest
+
+
 HELP = "Use a format like Romans 6:23, John 3:16-18, Psalm 23 or John 3:16-4:2."
 
 
@@ -26,11 +43,11 @@ def _point(s: str):
 
 def parse_reference(text: str):
     """Parse a reference into (book_text, spans). Span = (start_ch, start_v|None, end_ch, end_v|None)."""
-    m = _HEAD.match(text or "")
-    if not m:
+    head = _split_head(text)
+    if not head:
         raise RefError(f"Could not read that reference. {HELP}")
-    book = m.group(1).strip()
-    rest = re.sub(r"[\u2013\u2014]", "-", m.group(2)).replace(".", ":").replace(" ", "")
+    book, rest = head
+    rest = re.sub(r"[\u2013\u2014]", "-", rest).replace(".", ":").replace(" ", "")
     spans, cur, verse_ctx = [], None, False
     for part in re.split(r"[,;]", rest):
         if not part:
