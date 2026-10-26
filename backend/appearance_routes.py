@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from appearance import DEFAULTS, AppearanceIn, get_appearance, get_site, release_image
 from bible_routes import bible_state
 from core import SETTINGS_AUTH, db, hub, now_iso
+from preview_routes import broadcast_preview
 from register_routes import register_state
 
 router = APIRouter(prefix="/appearance")
@@ -19,6 +20,8 @@ IMAGE_TYPES = {"image/png", "image/jpeg", "image/webp", "image/gif"}
 
 async def _broadcast(display: str):
     await hub.broadcast(display, await (register_state() if display == "register" else bible_state()))
+    if display == "bible":  # the preview screen follows the Bible display's look
+        await broadcast_preview()
 
 
 async def _broadcast_all():

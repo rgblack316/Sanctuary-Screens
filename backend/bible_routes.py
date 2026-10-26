@@ -364,7 +364,7 @@ class PreparedIn(BaseModel):
     reference: str = Field(..., min_length=1, max_length=200)
     translation_code: Optional[str] = None
     preloaded_text_optional: str = Field("", max_length=20000)
-    kind: Literal["scripture", "custom"] = "scripture"
+    kind: Literal["scripture", "hymn", "custom"] = "scripture"
     reference_only: bool = False
     library_id: Optional[str] = None
 
@@ -415,8 +415,10 @@ async def move_prepared(item_id: str, body: MoveIn):
     if not item:
         raise HTTPException(404, "Prepared item not found")
     up = body.direction == "up"
+    # Each list (scripture / hymns / custom) is ordered on its own: swap only with a neighbour of the same kind.
+    same_kind = {"$or": [{"kind": "scripture"}, {"kind": {"$exists": False}}]} if item.kind == "scripture" else {"kind": item.kind}
     other = await db.bible_prepared.find_one(
-        {"service_date": item.service_date, "sort_order": {"$lt" if up else "$gt": item.sort_order}},
+        {"service_date": item.service_date, "sort_order": {"$lt" if up else "$gt": item.sort_order}, **same_kind},
         sort=[("sort_order", -1 if up else 1)])
     if other:
         await db.bible_prepared.update_one({"_id": oid(item.id)}, {"$set": {"sort_order": other["sort_order"]}})

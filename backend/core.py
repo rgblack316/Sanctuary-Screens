@@ -58,7 +58,7 @@ def now_iso() -> str:
 
 class Hub:
     def __init__(self):
-        self.channels = {"register": set(), "bible": set()}
+        self.channels = {"register": set(), "bible": set(), "preview": set()}
 
     async def connect(self, channel, ws):
         await ws.accept()

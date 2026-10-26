@@ -20,6 +20,8 @@ import backup
 import bible_routes
 import library_routes
 import looks_routes
+import preview_routes
+import songs_routes
 from core import (ADMIN_PIN, BIBLE_AUTH, ENV_JWT_SECRET, JWT_ALG, JWT_SECRET, REGISTER_AUTH, SEED_DIR, SESSION_HOURS, SETTINGS_AUTH,
                   client, db, hub, now_iso)
 from importer import validate_csv
@@ -174,12 +176,14 @@ async def health():
 api.include_router(register_router)
 api.include_router(bible_routes.router)
 api.include_router(library_routes.router)
+api.include_router(songs_routes.router)
+api.include_router(preview_routes.router)
 api.include_router(appearance_routes.router)
 api.include_router(looks_routes.router)
 api.include_router(backup.router)
 app.include_router(api)
 
-STATE_FN = {"register": register_state, "bible": bible_routes.bible_state}
+STATE_FN = {"register": register_state, "bible": bible_routes.bible_state, "preview": preview_routes.preview_state}
 
 
 @app.websocket("/api/ws/{channel}")
@@ -225,6 +229,8 @@ async def ensure_indexes():
     await db.bible_translations.create_index("translation_code", unique=True)
     await db.bible_prepared.create_index([("service_date", 1), ("sort_order", 1)])
     await db.bible_passages.create_index("status")
+    await db.hymnal_songs.create_index([("songbook_key", 1), ("page_key", 1)])
+    await db.hymnal_songs.create_index([("songbook_key", 1), ("title_key", 1)])
 
 
 async def migrate_v1():
