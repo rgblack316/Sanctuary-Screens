@@ -26,16 +26,32 @@ async def _broadcast_all():
     await _broadcast("bible")
 
 
+def sniff_image_type(data: bytes):
+    """Identify the image from its first bytes instead of trusting the browser-supplied type."""
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if data.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if data[:6] in (b"GIF87a", b"GIF89a"):
+        return "image/gif"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    return None
+
+
 async def _store_image(file: UploadFile, tag: str) -> str:
     if file.content_type not in IMAGE_TYPES:
         raise HTTPException(415, "Use a PNG, JPG, WEBP or GIF image.")
-    data = await file.read()
+    data = await file.read(MAX_IMAGE + 1)
     if not data:
         raise HTTPException(422, "The image file is empty.")
     if len(data) > MAX_IMAGE:
         raise HTTPException(413, "Image is larger than 12 MB. Please use a smaller image.")
+    kind = sniff_image_type(data)
+    if not kind:
+        raise HTTPException(415, "That file is not a valid PNG, JPG, WEBP or GIF image.")
     res = await db.display_images.insert_one({"display": tag, "filename": file.filename or "",
-                                              "content_type": file.content_type, "size": len(data),
+                                              "content_type": kind, "size": len(data),
                                               "data": Binary(data), "created_at": now_iso()})
     return str(res.inserted_id)
 
