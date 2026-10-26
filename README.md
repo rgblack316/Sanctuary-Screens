@@ -49,9 +49,9 @@ cd /opt/sanctuary-screens && sudo ./upgrade.sh
 
 ## Configuration (`.env`)
 
-See `env.template` (the installer copies it to `.env`; the template is not a dot-file so it always syncs to GitHub). Key settings: `ADMIN_PIN` (4 digits, shared by both admin pages), `APP_PORT`, `BACKEND_PORT`, `CURRENCY_SYMBOL`, `IDLE_TITLE`, `IDLE_SUBTITLE`, `MONGO_IMAGE` (use `mongo:4.4` if the CPU lacks AVX). After editing run `docker compose up -d`.
+See `env.template` (the installer copies it to `.env`; the template is not a dot-file so it always syncs to GitHub). Set `JWT_SECRET` to a random value (the installer does this; or `openssl rand -hex 32`) - if it is a placeholder or under 32 characters the backend logs a warning and uses a random secret that ends admin sessions at every restart. Key settings: `ADMIN_PIN` (4 digits, shared by both admin pages), `APP_PORT`, `BACKEND_PORT`, `CURRENCY_SYMBOL`, `IDLE_TITLE`, `IDLE_SUBTITLE`, `MONGO_IMAGE` (use `mongo:4.4` if the CPU lacks AVX). After editing run `docker compose up -d`.
 
-The PIN is stored in the database only as a bcrypt hash. Five wrong PIN attempts lock the device out for 5 minutes. Admin sessions last 12 hours per browser.
+The PIN is stored in the database only as a bcrypt hash. Five wrong PIN attempts lock the device out for 5 minutes; each repeated lockout doubles the wait (up to 24 hours), and a correct PIN resets it. Admin sessions last 12 hours per browser.
 
 `ADMIN_PIN` sets the PIN on first start. After that the PIN can be changed in `/settings-admin` → Admin PIN; that change survives restarts and upgrades (changing it signs out all other admin screens). `ADMIN_PIN` only takes effect again if you change its value in `.env` (or run `./upgrade.sh --reset-pin`) – use this to recover a forgotten PIN.
 

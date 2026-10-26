@@ -9,6 +9,8 @@ from typing import Literal
 
 import bcrypt
 import jwt
+from pymongo import ReturnDocument
+from pymongo.errors import DuplicateKeyError
 from fastapi import APIRouter, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
@@ -18,7 +20,7 @@ import backup
 import bible_routes
 import library_routes
 import looks_routes
-from core import (ADMIN_PIN, BIBLE_AUTH, JWT_ALG, JWT_SECRET, REGISTER_AUTH, SEED_DIR, SESSION_HOURS, SETTINGS_AUTH,
+from core import (ADMIN_PIN, BIBLE_AUTH, ENV_JWT_SECRET, JWT_ALG, JWT_SECRET, REGISTER_AUTH, SEED_DIR, SESSION_HOURS, SETTINGS_AUTH,
                   client, db, hub, now_iso)
 from importer import validate_csv
 from register_routes import register_state, router as register_router
@@ -28,6 +30,7 @@ log = logging.getLogger("sanctuary")
 
 MAX_ATTEMPTS = 5
 LOCK_MINUTES = 5
+MAX_LOCK_MINUTES = 24 * 60
 
 app = FastAPI(title="Sanctuary Screens")
 api = APIRouter(prefix="/api")
@@ -52,24 +55,68 @@ def client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
+async def _claim_attempt(ip: str, now_iso_str: str) -> dict:
+    """Atomically count one PIN attempt for this IP and return the updated record.
+
+    The counter is incremented *before* the PIN is checked, in a single database operation, so a
+    burst of simultaneous guesses cannot all read "0 attempts so far" and slip past the limit.
+    """
+    now = datetime.fromisoformat(now_iso_str)
+    # Quiet for a day: forget the IP completely (strike history included).
+    await db.pin_attempts.delete_one({"_id": ip, "updated_at": {"$lt": (now - timedelta(hours=24)).isoformat()}})
+    # An expired lock starts a fresh window (strikes are kept so repeat offenders wait longer).
+    await db.pin_attempts.update_one({"_id": ip, "locked_until": {"$ne": None, "$lte": now_iso_str}},
+                                     {"$set": {"count": 0, "locked_until": None}})
+    # A few stray typos long ago should not count towards today's allowance.
+    await db.pin_attempts.update_one({"_id": ip, "locked_until": None,
+                                      "updated_at": {"$lt": (now - timedelta(minutes=15)).isoformat()}},
+                                     {"$set": {"count": 0}})
+    for _ in range(3):
+        try:
+            return await db.pin_attempts.find_one_and_update(
+                {"_id": ip}, {"$inc": {"count": 1}, "$set": {"updated_at": now_iso_str}, "$setOnInsert": {"locked_until": None, "strikes": 0}},
+                upsert=True, return_document=ReturnDocument.AFTER)
+        except DuplicateKeyError:  # two first-ever attempts raced to create the record; retry
+            continue
+    raise HTTPException(503, "Please try again.")
+
+
+async def _lock(ip: str) -> int:
+    """Lock this IP. Each repeated lockout doubles the wait (5, 10, 20 ... minutes, max 24 h)."""
+    rec = await db.pin_attempts.find_one_and_update(
+        {"_id": ip, "locked_until": None}, {"$inc": {"strikes": 1}}, return_document=ReturnDocument.AFTER)
+    strikes = (rec or {}).get("strikes", 1)
+    minutes = min(LOCK_MINUTES * 2 ** max(0, strikes - 1), MAX_LOCK_MINUTES)
+    until = (datetime.now(timezone.utc) + timedelta(minutes=minutes)).isoformat()
+    await db.pin_attempts.update_one({"_id": ip, "locked_until": None}, {"$set": {"locked_until": until}})
+    return minutes
+
+
+def _lock_message(locked_until: str, now: datetime) -> str:
+    secs = (datetime.fromisoformat(locked_until) - now).total_seconds()
+    mins = max(1, int(secs // 60) + 1)
+    return f"Too many incorrect attempts. Try again in {mins} minute(s)."
+
+
 async def check_pin(pin: str, request: Request) -> dict:
     """Verify the PIN with per-IP lockout. Returns the admin config on success."""
     ip = client_ip(request)
     now = datetime.now(timezone.utc)
-    rec = await db.pin_attempts.find_one({"_id": ip}) or {}
-    if rec.get("locked_until") and rec["locked_until"] > now.isoformat():
-        mins = max(1, int((datetime.fromisoformat(rec["locked_until"]) - now).total_seconds() // 60) + 1)
-        raise HTTPException(429, f"Too many incorrect attempts. Try again in {mins} minute(s).")
+    rec = await _claim_attempt(ip, now.isoformat())
+    if rec.get("locked_until"):
+        raise HTTPException(429, _lock_message(rec["locked_until"], now))
+    if rec["count"] > MAX_ATTEMPTS:  # beyond the allowance within one window (e.g. a parallel burst)
+        await _lock(ip)
+        rec = await db.pin_attempts.find_one({"_id": ip}) or {}
+        raise HTTPException(429, _lock_message(rec["locked_until"], now) if rec.get("locked_until")
+                            else "Too many incorrect attempts. Try again later.")
     cfg = await db.admin_config.find_one({"_id": "admin"})
     valid = bool(re.fullmatch(r"\d{4}", pin)) and bcrypt.checkpw(pin.encode(), cfg["pin_hash"].encode())
     if not valid:
-        count = rec.get("count", 0) + 1
-        if count >= MAX_ATTEMPTS:
-            update = {"count": 0, "locked_until": (now + timedelta(minutes=LOCK_MINUTES)).isoformat()}
-            await db.pin_attempts.update_one({"_id": ip}, {"$set": update}, upsert=True)
-            raise HTTPException(429, f"Too many incorrect attempts. Try again in {LOCK_MINUTES} minutes.")
-        await db.pin_attempts.update_one({"_id": ip}, {"$set": {"count": count, "locked_until": None}}, upsert=True)
-        raise HTTPException(401, f"Incorrect PIN. {MAX_ATTEMPTS - count} attempt(s) left.")
+        if rec["count"] >= MAX_ATTEMPTS:
+            minutes = await _lock(ip)
+            raise HTTPException(429, f"Too many incorrect attempts. Try again in {minutes} minutes.")
+        raise HTTPException(401, f"Incorrect PIN. {MAX_ATTEMPTS - rec['count']} attempt(s) left.")
     await db.pin_attempts.delete_one({"_id": ip})
     return cfg
 
@@ -194,7 +241,7 @@ async def run_migrations():
 
 async def ensure_pin():
     """ADMIN_PIN seeds the PIN; later it only applies again if its value in .env is changed."""
-    fingerprint = hashlib.sha256(f"{JWT_SECRET}:{ADMIN_PIN}".encode()).hexdigest()
+    fingerprint = hashlib.sha256(f"{ENV_JWT_SECRET}:{ADMIN_PIN}".encode()).hexdigest()
     cfg = await db.admin_config.find_one({"_id": "admin"})
     if cfg and cfg.get("env_pin_fingerprint") == fingerprint:
         return

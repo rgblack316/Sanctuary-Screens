@@ -63,6 +63,10 @@ prompt_pin() {
   while true; do
     read -rsp "Admin PIN (4 digits): " p1; echo
     [[ "$p1" =~ ^[0-9]{4}$ ]] || { warn "PIN must be exactly 4 digits."; continue; }
+    case "$p1" in
+      1234|0000|1111|2222|3333|4444|5555|6666|7777|8888|9999|4321|1212|2580)
+        warn "That PIN is too easy to guess. Choose a different one."; continue ;;
+    esac
     read -rsp "Confirm PIN: " p2; echo
     [ "$p1" = "$p2" ] && { PIN="$p1"; return; }
     warn "PINs did not match."

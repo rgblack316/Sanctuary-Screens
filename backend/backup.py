@@ -5,6 +5,7 @@ import os
 import re
 import smtplib
 import ssl
+import zlib
 from datetime import datetime
 from email.message import EmailMessage
 from pathlib import Path
@@ -25,6 +26,8 @@ COLLECTIONS = ["register_services", "register_state", "bible_translations", "bib
                "bible_library", "bible_hymnals",
                "bible_settings", "display_appearance", "display_looks", "display_images", "site_settings"]
 MAX_ATTACH = 20 * 1024 * 1024
+MAX_UPLOAD_BYTES = 200 * 1024 * 1024    # compressed backup file
+MAX_RESTORE_BYTES = 1024 * 1024 * 1024  # after decompression
 
 
 class BackupSettingsIn(BaseModel):
@@ -119,12 +122,26 @@ async def create_backup(send_email: bool, trigger: str) -> dict:
     return result
 
 
-async def restore_bytes(raw: bytes) -> dict:
+def _parse_backup(raw: bytes) -> dict:
+    """Fully decode and validate a backup in memory. Nothing in the database is touched here."""
     try:
-        data = json_util.loads(gzip.decompress(raw).decode())
-        assert data.get("app") == "sanctuary-screens"
+        d = zlib.decompressobj(wbits=31)
+        text = d.decompress(raw, MAX_RESTORE_BYTES)
+        if d.unconsumed_tail:
+            raise HTTPException(413, "This backup is too large to restore.")
+        data = json_util.loads(text.decode())
+        assert data.get("app") == "sanctuary-screens" and isinstance(data.get("collections"), dict)
+        for c in COLLECTIONS:
+            docs = data["collections"].get(c)
+            assert docs is None or (isinstance(docs, list) and all(isinstance(x, dict) and "_id" in x for x in docs))
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(422, "This is not a valid Sanctuary Screens backup file.")
+    return data
+
+
+async def _apply_backup(data: dict) -> dict:
     counts = {}
     for c in COLLECTIONS:
         docs = data["collections"].get(c)
@@ -134,13 +151,38 @@ async def restore_bytes(raw: bytes) -> dict:
         if docs:
             await db[c].insert_many(docs)
         counts[c] = len(docs)
+    return counts
+
+
+async def restore_bytes(raw: bytes) -> dict:
+    data = _parse_backup(raw)  # validate everything before the first delete
+    # Safety net: snapshot the current data first. If the restore fails part-way the snapshot is put back.
+    snapshot = await create_backup(False, "pre-restore")
+    try:
+        counts = await _apply_backup(data)
+    except Exception as e:
+        log.error("Restore failed (%s); rolling back to %s", e, snapshot["name"])
+        try:
+            await _apply_backup(_parse_backup((BACKUP_DIR / snapshot["name"]).read_bytes()))
+        except Exception as e2:
+            log.error("Rollback failed: %s", e2)
+            raise HTTPException(500, f"Restore failed and the automatic rollback also failed. "
+                                     f"Your previous data is saved as {snapshot['name']} in the backups list.")
+        raise HTTPException(500, "Restore failed, so nothing was changed. Your previous data was put back.")
     from bible_routes import _books_cache, bible_state
     from register_routes import register_state
     _books_cache.clear()
     await db.bible_display.update_one({"_id": "state"}, {"$set": {"mode": "idle", "active_passage_id": None}}, upsert=True)
     await hub.broadcast("register", await register_state())
     await hub.broadcast("bible", await bible_state())
-    return {"restored": counts, "backup_created_at": data.get("created_at")}
+    return {"restored": counts, "backup_created_at": data.get("created_at"), "safety_backup": snapshot["name"]}
+
+
+async def _read_limited(file: UploadFile) -> bytes:
+    raw = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(raw) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, "That file is too large to be a Sanctuary Screens backup.")
+    return raw
 
 
 async def scheduler_loop():
@@ -218,4 +260,4 @@ async def restore_local(name: str, confirm: bool = False):
 async def restore_upload(file: UploadFile = File(...), confirm: bool = False):
     if not confirm:
         raise HTTPException(400, "Restore must be confirmed.")
-    return await restore_bytes(await file.read())
+    return await restore_bytes(await _read_limited(file))
