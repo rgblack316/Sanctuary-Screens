@@ -5,6 +5,7 @@ import { AdminShell } from "@/components/AdminShell";
 import { AppearanceEditor } from "@/components/settings/AppearanceEditor";
 import { PinChangeForm } from "@/components/settings/PinChangeForm";
 import { BackupSettingsForm } from "@/components/settings/BackupSettingsForm";
+import { PlayoutWebhookForm } from "@/components/settings/PlayoutWebhookForm";
 import { BackupList } from "@/components/settings/BackupList";
 
 function SettingsConsole() {
@@ -16,11 +17,13 @@ function SettingsConsole() {
           <TabsTrigger value="bible" data-testid="settings-tab-bible">Bible display</TabsTrigger>
           <TabsTrigger value="register" data-testid="settings-tab-register">Register display</TabsTrigger>
           <TabsTrigger value="security" data-testid="settings-tab-security">Admin PIN</TabsTrigger>
+          <TabsTrigger value="playout" data-testid="settings-tab-playout">Playout</TabsTrigger>
           <TabsTrigger value="backup" data-testid="settings-tab-backup">Backups</TabsTrigger>
         </TabsList>
         <TabsContent value="bible"><AppearanceEditor display="bible" /></TabsContent>
         <TabsContent value="register"><AppearanceEditor display="register" /></TabsContent>
         <TabsContent value="security"><PinChangeForm /></TabsContent>
+        <TabsContent value="playout"><PlayoutWebhookForm /></TabsContent>
         <TabsContent value="backup">
           <div className="grid gap-8 lg:grid-cols-2"><BackupList /><BackupSettingsForm /></div>
         </TabsContent>
