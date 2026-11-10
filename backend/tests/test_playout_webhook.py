@@ -80,3 +80,19 @@ def test_logging_can_be_turned_off_and_navigation(client):
     assert _hook(client, tok, action="next").status_code == 409
     client.delete("/api/hooks/token", headers=h)
     assert _hook(client, tok, action="clear").status_code == 403
+
+
+def test_clear_only_if_hymn(client):
+    tok = _token(client)
+    _hook(client, tok, action="hymn", title="Guarded Song", page="3", songbook="X")
+    client.post("/api/bible/publish", headers=auth(client), json={        # operator puts scripture up afterwards
+        "normalized_reference": "John 3:16", "source_type": "manual",
+        "verses": [{"reference_label": "John 3:16", "verse_text": "For God so loved"}]})
+    r = _hook(client, tok, action="clear", only_if="hymn").json()
+    assert r["cleared"] is False and r["state"]["mode"] == "passage"      # scripture is left alone
+    _hook(client, tok, action="hymn", title="Guarded Song", page="3", songbook="X")
+    r = _hook(client, tok, action="clear", only_if="hymn").json()
+    assert r["cleared"] is True and r["state"]["mode"] == "idle"
+    assert _hook(client, tok, action="clear", only_if="hymn").json()["cleared"] is False   # already idle
+    assert _hook(client, tok, action="clear", only_if="scripture").status_code == 422
+    assert _hook(client, tok, action="clear").json()["cleared"] is True

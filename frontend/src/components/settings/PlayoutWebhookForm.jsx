@@ -77,7 +77,7 @@ export const PlayoutWebhookForm = () => {
           <div>
             <p className="label-caps">Example</p>
             <pre className="mt-1 overflow-x-auto rounded bg-[#0B0E14] p-3 text-xs">{sample}</pre>
-            <p className="mt-2 text-xs text-slate-500">Other actions: <code>next</code>, <code>prev</code>, <code>clear</code>, and <code>goto</code> with <code>"index": 0</code>.</p>
+            <p className="mt-2 text-xs text-slate-500">Other actions: <code>next</code>, <code>prev</code>, <code>clear</code>, and <code>goto</code> with <code>"index": 0</code>. At the end of a song send <code>clear</code> with <code>"only_if": "hymn"</code> to go back to idle only if that song is still showing.</p>
           </div>
         </div>
       )}

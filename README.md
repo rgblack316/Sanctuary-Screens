@@ -118,7 +118,7 @@ curl -X POST http://<nuc-ip>:8091/api/hooks/bible \
   -d '{"action":"hymn","songbook":"Baptist Hymnal","title":"Amazing Grace","page":"112"}'
 ```
 
-Actions: `next`, `prev`, `clear`, `goto` (`"index": 0`), and `hymn`. `hymn` looks the song up in the imported songbook (songbook name is case-insensitive) and puts the slide straight on screen; it does not need to be in the prepared list. A page shared by several songs needs the title too (otherwise the reply is `409` with the matches). A song that isn't in any songbook is still shown from the title/page/songbook you send. With logging on (default), each song is added once to today's Hymns list, marked **Played**; if it was already prepared it is just marked played. The token is stored hashed and is not part of backups.
+Actions: `next`, `prev`, `clear`, `goto` (`"index": 0`), and `hymn`. Send `{"action":"clear","only_if":"hymn"}` when a song ends: it returns to idle only if the song the webhook put up is still showing (otherwise the reply has `"cleared": false` and the screen is untouched, e.g. when scripture was put up since). `hymn` looks the song up in the imported songbook (songbook name is case-insensitive) and puts the slide straight on screen; it does not need to be in the prepared list. A page shared by several songs needs the title too (otherwise the reply is `409` with the matches). A song that isn't in any songbook is still shown from the title/page/songbook you send. With logging on (default), each song is added once to today's Hymns list, marked **Played**; if it was already prepared it is just marked played. The token is stored hashed and is not part of backups.
 
 ## Operating during a service
 

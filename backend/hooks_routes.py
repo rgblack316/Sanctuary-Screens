@@ -3,6 +3,7 @@
 POST /api/hooks/bible   (Authorization: Bearer <token>  or  X-Webhook-Token: <token>)
   {"action": "next" | "prev" | "clear"}
   {"action": "goto", "index": 0}
+  {"action": "clear", "only_if": "hymn"}   # back to idle only if the song sent by this webhook is still showing
   {"action": "hymn", "songbook": "Baptist Hymnal", "title": "Amazing Grace", "page": "112"}
 
 The token is generated in /settings-admin and only its hash is stored.
@@ -25,6 +26,7 @@ from songs_routes import _page_sort, _public, key
 router = APIRouter(prefix="/hooks")
 CFG = {"_id": "webhook"}
 PREFIX = "ssw_"
+HOOK_HYMN = "hook:hymn"  # marks a passage that was put on screen by the webhook
 
 
 def _hash(token: str) -> str:
@@ -90,6 +92,7 @@ class HookIn(BaseModel):
     songbook: str = Field("", max_length=80)
     title: str = Field("", max_length=160)
     page: str = Field("", max_length=12)
+    only_if: Optional[Literal["hymn"]] = None
 
 
 async def _find_song(body: HookIn) -> list:
@@ -141,7 +144,7 @@ async def _show_hymn(body: HookIn) -> dict:
         raise HTTPException(404, "No song found for that page. Check the songbook name or send the title too.")
     text = "\n".join(x for x in (f"Page {page}" if page else "", book) if x)
     state = await bible_routes.publish(bible_routes.PublishIn(
-        normalized_reference=title, source_type="custom",
+        reference_input=HOOK_HYMN, normalized_reference=title, source_type="custom",
         verses=[bible_routes.SlideIn(reference_label=title, verse_text=text)]))
     logged = False
     if (await _config()).get("log_played", True):
@@ -158,5 +161,9 @@ async def bible_hook(body: HookIn):
             raise HTTPException(422, "goto needs an index (0 is the first slide).")
         return {"state": await bible_routes._move(index=body.index)}
     if body.action == "clear":
-        return {"state": await bible_routes.clear_display()}
+        if body.only_if == "hymn":
+            p = await bible_routes.active_passage()
+            if not p or p.reference_input != HOOK_HYMN:
+                return {"state": await bible_routes.bible_state(), "cleared": False}
+        return {"state": await bible_routes.clear_display(), "cleared": True}
     return {"state": await bible_routes._move(delta=1 if body.action == "next" else -1)}
