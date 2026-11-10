@@ -72,3 +72,5 @@ class PreparedItem(BaseDocument):
     reference_only: bool = False
     library_id: Optional[str] = None
     sort_order: int = 0
+    played: bool = False
+    played_at: Optional[str] = None

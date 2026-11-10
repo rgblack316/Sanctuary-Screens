@@ -18,6 +18,7 @@ from starlette.middleware.cors import CORSMiddleware
 import appearance_routes
 import backup
 import bible_routes
+import hooks_routes
 import library_routes
 import looks_routes
 import preview_routes
@@ -178,6 +179,7 @@ api.include_router(bible_routes.router)
 api.include_router(library_routes.router)
 api.include_router(songs_routes.router)
 api.include_router(preview_routes.router)
+api.include_router(hooks_routes.router)
 api.include_router(appearance_routes.router)
 api.include_router(looks_routes.router)
 api.include_router(backup.router)

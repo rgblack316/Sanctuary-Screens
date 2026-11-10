@@ -108,6 +108,18 @@ Bible display tip: in `/settings-admin` → Bible → *Church name & logo*, tick
 
 `/bible-preview` (open on the LAN like `/bible`, no PIN) mirrors what you are building in `/bible-admin` – the current draft and the slide you select – with a "Preview · not on screen" badge. Nothing reaches `/bible` until you press **Send to screen**.
 
+## Playout webhook
+
+Lets another app on the LAN (e.g. the church playout app) change `/bible`. `/settings-admin` → **Playout** → *Turn on & create token* (the token is shown once; making a new one invalidates the old). Then:
+
+```bash
+curl -X POST http://<nuc-ip>:8091/api/hooks/bible \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"action":"hymn","songbook":"Baptist Hymnal","title":"Amazing Grace","page":"112"}'
+```
+
+Actions: `next`, `prev`, `clear`, `goto` (`"index": 0`), and `hymn`. `hymn` looks the song up in the imported songbook (songbook name is case-insensitive) and puts the slide straight on screen; it does not need to be in the prepared list. A page shared by several songs needs the title too (otherwise the reply is `409` with the matches). A song that isn't in any songbook is still shown from the title/page/songbook you send. With logging on (default), each song is added once to today's Hymns list, marked **Played**; if it was already prepared it is just marked played. The token is stored hashed and is not part of backups.
+
 ## Operating during a service
 
 - `/bible-admin`: pick a prepared item or library slide (Preview / Go live) or type a reference, check the slide-by-slide preview (each slide is editable), then **Send to screen**. Use Prev/Next, the verse chips, or arrow keys / PageUp / PageDown (works with presentation clickers). Switch translation live from the On Screen bar. **Clear to idle** returns `/bible` to the idle slide.

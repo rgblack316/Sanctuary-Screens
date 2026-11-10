@@ -112,7 +112,7 @@ export const PreparedList = ({ translations, defaultCode, onLoad, date, setDate,
             <div className="flex items-start gap-3">
               <span className="mt-0.5 font-mono-ui text-xs text-slate-500">{i + 1}</span>
               <div className="min-w-0 flex-1">
-                <p className="font-display font-bold" data-testid={`prepared-item-ref-${i}`}>{it.reference}</p>
+                <p className="font-display font-bold" data-testid={`prepared-item-ref-${i}`}>{it.reference}{it.played && <span className="ml-2 rounded-full bg-emerald-500/20 px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wider text-emerald-300" data-testid={`prepared-item-played-${i}`}>Played</span>}</p>
                 <p className="truncate text-xs text-slate-500">
                   {it.title_or_note || "—"} · <span data-testid={`prepared-item-kind-${i}`}>{itemDetail(it, defaultCode)}</span>
                 </p>
