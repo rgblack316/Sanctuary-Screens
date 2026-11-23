@@ -19,6 +19,7 @@ const KIND_LABEL = { manual: "manual", custom: "custom slide", reference_only: "
 
 export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDate, onPrepared, onLibrary, libraryTick, songbooksTick, previewIndex, onSelectSlide }) => {
   const [refOnly, setRefOnly] = useState(false);
+  const [oneSlide, setOneSlide] = useState(false);
   const [tab, setTab] = useState("lookup");
   const [reference, setReference] = useState("");
   const [code, setCode] = useState(null);
@@ -30,7 +31,7 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
 
   useEffect(() => { if (!code && defaultCode) setCode(defaultCode); }, [defaultCode, code]);
   useEffect(() => {
-    if (["local_lookup", "reference_only"].includes(draft?.source_type)) { setReference(draft.reference_input || draft.normalized_reference); setCode(draft.translation_code); }
+    if (["local_lookup", "reference_only"].includes(draft?.source_type)) { setReference(draft.reference_input || draft.normalized_reference); setCode(draft.translation_code); if (draft.source_type === "local_lookup") setOneSlide(!!draft.combined); }
   }, [draft]);
 
   const lookup = async (e) => {
@@ -39,7 +40,7 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
     setBusy(true);
     setLookupError("");
     try {
-      setDraft(await (refOnly ? referenceOnlyDraft : lookupDraft)(reference.trim(), code));
+      setDraft(await (refOnly ? referenceOnlyDraft(reference.trim(), code) : lookupDraft(reference.trim(), code, oneSlide)));
     } catch (err) {
       setLookupError(errMsg(err, "Lookup failed"));
     } finally {
@@ -149,6 +150,10 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
           <label className="mt-3 flex w-fit cursor-pointer items-center gap-2 text-sm text-slate-300">
             <Checkbox checked={refOnly} onCheckedChange={(v) => setRefOnly(!!v)} data-testid="reference-only-checkbox" />
             Reference only (show just the reference, no verse text)
+          </label>
+          <label className={`mt-2 flex w-fit items-center gap-2 text-sm text-slate-300 ${refOnly ? "cursor-not-allowed opacity-40" : "cursor-pointer"}`}>
+            <Checkbox checked={oneSlide && !refOnly} disabled={refOnly} onCheckedChange={(v) => setOneSlide(!!v)} data-testid="one-slide-checkbox" />
+            Put the whole reference on one slide (instead of one slide per verse)
           </label>
           <LibrarySuggest text={reference} kind="scripture" translationCode={code} {...suggest} />
           {lookupError && (

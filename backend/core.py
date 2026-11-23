@@ -44,6 +44,7 @@ IDLE_DIR = Path(os.environ.get("IDLE_ASSET_DIR", str(ROOT_DIR / "data" / "idle")
 SEED_DIR = Path(os.environ.get("SEED_DIR", str(ROOT_DIR / "seed")))
 SESSION_HOURS = 12
 MAX_SLIDES = 300
+MAX_SLIDE_CHARS = 5000
 JWT_ALG = "HS256"
 
 if not re.fullmatch(r"\d{4}", ADMIN_PIN):

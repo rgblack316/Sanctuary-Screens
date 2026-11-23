@@ -22,6 +22,7 @@ class LibraryItem(BaseDocument):
     translation_code: Optional[str] = None
     preloaded_text_optional: str = ""
     reference_only: bool = False
+    combined: bool = False
     created_at: str
 
 
@@ -35,6 +36,7 @@ class LibraryIn(BaseModel):
     translation_code: Optional[str] = None
     preloaded_text_optional: str = Field("", max_length=20000)
     reference_only: bool = False
+    combined: bool = False
 
 
 class Hymnal(BaseDocument):

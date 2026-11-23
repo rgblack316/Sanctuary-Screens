@@ -19,6 +19,12 @@ const ScriptureFields = ({ form, set, translations }) => (
       Reference only (no verse text)
     </label>
     {!form.reference_only && (
+      <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-slate-300">
+        <Checkbox checked={form.combined} onCheckedChange={(v) => set("combined")(!!v)} data-testid="prepared-one-slide-checkbox" />
+        Whole reference on one slide
+      </label>
+    )}
+    {!form.reference_only && (
       <Textarea value={form.preloaded_text_optional} onChange={(e) => set("preloaded_text_optional")(e.target.value)} rows={4} placeholder="Optional manual text (overrides lookup). Blank line = new slide." data-testid="prepared-text-input" className="bg-[#0B0E14]" />
     )}
   </>
@@ -43,6 +49,7 @@ export const PreparedDialog = ({ item, translations, defaultCode, onClose, onSav
     preloaded_text_optional: item.preloaded_text_optional || "",
     kind: item.kind || "scripture",
     reference_only: !!item.reference_only,
+    combined: !!item.combined,
     library_id: item.library_id || null,
   });
   const [busy, setBusy] = useState(false);
@@ -54,7 +61,7 @@ export const PreparedDialog = ({ item, translations, defaultCode, onClose, onSav
     if (!form.reference.trim()) return toast.error(custom ? "Title is required." : "Reference is required.");
     const body = { ...form, translation_code: custom ? null : form.translation_code,
       preloaded_text_optional: !custom && form.reference_only ? "" : form.preloaded_text_optional,
-      reference_only: !custom && form.reference_only };
+      reference_only: !custom && form.reference_only, combined: !custom && !form.reference_only && form.combined };
     setBusy(true);
     try {
       if (submit) await submit({ ...body, name: name.trim() });

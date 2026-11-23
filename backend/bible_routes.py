@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 from appearance import get_appearance, get_site
 from books import display_name, resolve_query_book
-from core import (BIBLE_AUTH, IDLE_DIR, IDLE_SUBTITLE, IDLE_TITLE, MAX_SLIDES, db, hub, now_iso)
+from core import (BIBLE_AUTH, IDLE_DIR, IDLE_SUBTITLE, IDLE_TITLE, MAX_SLIDES, MAX_SLIDE_CHARS, db, hub, now_iso)
 from importer import validate_csv
 from models import Passage, PreparedItem, Translation, VerseSlide
 from reference import RefError, format_reference, format_span, parse_reference
@@ -51,7 +51,7 @@ async def get_translation(code: str) -> Translation:
     return t
 
 
-async def lookup_passage(reference: str, code: str) -> dict:
+async def lookup_passage(reference: str, code: str, combine: bool = False) -> dict:
     t = await get_translation(code)
     try:
         book_raw, spans = parse_reference(reference)
@@ -83,8 +83,14 @@ async def lookup_passage(reference: str, code: str) -> dict:
     normalized = format_reference(disp, spans)
     if not slides:
         raise HTTPException(404, f"No verses found for {normalized} in {code}. You can enter the text manually.")
+    if combine and slides:  # the whole reference on one slide instead of one slide per verse
+        text = " ".join(s.verse_text.strip() for s in slides)
+        if len(text) > MAX_SLIDE_CHARS:
+            raise HTTPException(422, f"{normalized} is too long for a single slide ({len(text)} characters, "
+                                     f"limit {MAX_SLIDE_CHARS}). Choose a smaller range or untick the one-slide option.")
+        slides = [VerseSlide(reference_label=normalized, verse_text=text, book_name=slides[0].book_name)]
     return {"reference_input": reference, "normalized_reference": normalized, "translation_code": code,
-            "translation_name": t.translation_name, "source_type": "local_lookup",
+            "translation_name": t.translation_name, "source_type": "local_lookup", "combined": combine,
             "verses": [s.model_dump() for s in slides], "warnings": warnings}
 
 
@@ -258,16 +264,17 @@ async def update_settings(body: SettingsIn):
 class LookupIn(BaseModel):
     reference: str = Field(..., min_length=1, max_length=200)
     translation_code: str
+    combine: bool = False
 
 
 @router.post("/lookup", dependencies=[BIBLE_AUTH])
 async def lookup(body: LookupIn):
-    return await lookup_passage(body.reference, body.translation_code)
+    return await lookup_passage(body.reference, body.translation_code, body.combine)
 
 
 class SlideIn(BaseModel):
     reference_label: str = Field(..., min_length=1, max_length=200)
-    verse_text: str = Field("", max_length=5000)
+    verse_text: str = Field("", max_length=MAX_SLIDE_CHARS)
     book_name: str = ""
     chapter: Optional[int] = None
     verse: Optional[int] = None
@@ -280,6 +287,7 @@ class PublishIn(BaseModel):
     source_type: Literal["local_lookup", "manual", "reference_only", "custom"]
     verses: List[SlideIn] = Field(..., min_length=1, max_length=MAX_SLIDES)
     start_index: int = 0
+    combined: bool = False
 
 
 @router.post("/publish", dependencies=[BIBLE_AUTH])
@@ -293,6 +301,7 @@ async def publish(body: PublishIn):
     idx = max(0, min(body.start_index, len(body.verses) - 1))
     p = Passage(reference_input=body.reference_input, normalized_reference=body.normalized_reference.strip(),
                 translation_code=body.translation_code, source_type=body.source_type,
+                combined=body.combined and body.source_type == "local_lookup",
                 verses=[VerseSlide(**v.model_dump()) for v in body.verses], active_slide_index=idx,
                 status="live", updated_at=now_iso())
     await db.bible_passages.update_many({"status": "live"}, {"$set": {"status": "ended"}})
@@ -346,7 +355,7 @@ async def switch_translation(body: SwitchIn):
         raise HTTPException(409, "No scripture is on the display.")
     if p.source_type not in ("local_lookup", "reference_only"):
         raise HTTPException(409, "Manual text cannot be switched to another translation.")
-    result = await lookup_passage(p.normalized_reference, body.translation_code)
+    result = await lookup_passage(p.normalized_reference, body.translation_code, p.combined)
     if p.source_type == "reference_only":
         result["verses"] = [VerseSlide(reference_label=result["normalized_reference"], verse_text="").model_dump()]
     st = await display_doc()
@@ -366,6 +375,7 @@ class PreparedIn(BaseModel):
     preloaded_text_optional: str = Field("", max_length=20000)
     kind: Literal["scripture", "hymn", "custom"] = "scripture"
     reference_only: bool = False
+    combined: bool = False
     library_id: Optional[str] = None
 
 
