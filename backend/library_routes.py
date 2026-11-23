@@ -23,6 +23,7 @@ class LibraryItem(BaseDocument):
     preloaded_text_optional: str = ""
     reference_only: bool = False
     combined: bool = False
+    verse_numbers: bool = True
     created_at: str
 
 
@@ -37,6 +38,7 @@ class LibraryIn(BaseModel):
     preloaded_text_optional: str = Field("", max_length=20000)
     reference_only: bool = False
     combined: bool = False
+    verse_numbers: bool = True
 
 
 class Hymnal(BaseDocument):

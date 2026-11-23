@@ -20,6 +20,7 @@ const KIND_LABEL = { manual: "manual", custom: "custom slide", reference_only: "
 export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDate, onPrepared, onLibrary, libraryTick, songbooksTick, previewIndex, onSelectSlide }) => {
   const [refOnly, setRefOnly] = useState(false);
   const [oneSlide, setOneSlide] = useState(false);
+  const [verseNums, setVerseNums] = useState(true);
   const [tab, setTab] = useState("lookup");
   const [reference, setReference] = useState("");
   const [code, setCode] = useState(null);
@@ -31,7 +32,7 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
 
   useEffect(() => { if (!code && defaultCode) setCode(defaultCode); }, [defaultCode, code]);
   useEffect(() => {
-    if (["local_lookup", "reference_only"].includes(draft?.source_type)) { setReference(draft.reference_input || draft.normalized_reference); setCode(draft.translation_code); if (draft.source_type === "local_lookup") setOneSlide(!!draft.combined); }
+    if (["local_lookup", "reference_only"].includes(draft?.source_type)) { setReference(draft.reference_input || draft.normalized_reference); setCode(draft.translation_code); if (draft.source_type === "local_lookup") { setOneSlide(!!draft.combined); setVerseNums(draft.verse_numbers !== false); } }
   }, [draft]);
 
   const lookup = async (e) => {
@@ -40,7 +41,7 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
     setBusy(true);
     setLookupError("");
     try {
-      setDraft(await (refOnly ? referenceOnlyDraft(reference.trim(), code) : lookupDraft(reference.trim(), code, oneSlide)));
+      setDraft(await (refOnly ? referenceOnlyDraft(reference.trim(), code) : lookupDraft(reference.trim(), code, oneSlide, verseNums)));
     } catch (err) {
       setLookupError(errMsg(err, "Lookup failed"));
     } finally {
@@ -155,6 +156,12 @@ export const Composer = ({ translations, defaultCode, draft, setDraft, serviceDa
             <Checkbox checked={oneSlide && !refOnly} disabled={refOnly} onCheckedChange={(v) => setOneSlide(!!v)} data-testid="one-slide-checkbox" />
             Put the whole reference on one slide (instead of one slide per verse)
           </label>
+          {oneSlide && !refOnly && (
+            <label className="ml-6 mt-2 flex w-fit cursor-pointer items-center gap-2 text-sm text-slate-300">
+              <Checkbox checked={verseNums} onCheckedChange={(v) => setVerseNums(!!v)} data-testid="verse-numbers-checkbox" />
+              Show verse numbers (small, before each verse)
+            </label>
+          )}
           <LibrarySuggest text={reference} kind="scripture" translationCode={code} {...suggest} />
           {lookupError && (
             <div data-testid="lookup-error" className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-200">

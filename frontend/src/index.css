@@ -117,6 +117,7 @@
     text-align: center; max-width: 92vw; text-wrap: balance;
     background: var(--ss-panel, transparent); padding: 2.5vmin 4vmin; border-radius: 1.5vmin;
 }
+.verse-num { font-size: 0.55em; line-height: 0; vertical-align: super; margin-right: 0.12em; font-weight: 700; color: var(--ss-accent, #f59e0b); }
 .bible-ref {
     font-family: "Outfit", system-ui, sans-serif; font-weight: 700; color: var(--ss-accent, #f59e0b);
     letter-spacing: 0.12em; text-transform: uppercase;

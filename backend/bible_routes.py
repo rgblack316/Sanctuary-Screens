@@ -51,7 +51,10 @@ async def get_translation(code: str) -> Translation:
     return t
 
 
-async def lookup_passage(reference: str, code: str, combine: bool = False) -> dict:
+_SUP = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
+
+
+async def lookup_passage(reference: str, code: str, combine: bool = False, verse_numbers: bool = True) -> dict:
     t = await get_translation(code)
     try:
         book_raw, spans = parse_reference(reference)
@@ -84,13 +87,13 @@ async def lookup_passage(reference: str, code: str, combine: bool = False) -> di
     if not slides:
         raise HTTPException(404, f"No verses found for {normalized} in {code}. You can enter the text manually.")
     if combine and slides:  # the whole reference on one slide instead of one slide per verse
-        text = " ".join(s.verse_text.strip() for s in slides)
+        text = " ".join((str(s.verse).translate(_SUP) if verse_numbers and s.verse else "") + s.verse_text.strip() for s in slides)
         if len(text) > MAX_SLIDE_CHARS:
             raise HTTPException(422, f"{normalized} is too long for a single slide ({len(text)} characters, "
                                      f"limit {MAX_SLIDE_CHARS}). Choose a smaller range or untick the one-slide option.")
         slides = [VerseSlide(reference_label=normalized, verse_text=text, book_name=slides[0].book_name)]
     return {"reference_input": reference, "normalized_reference": normalized, "translation_code": code,
-            "translation_name": t.translation_name, "source_type": "local_lookup", "combined": combine,
+            "translation_name": t.translation_name, "source_type": "local_lookup", "combined": combine, "verse_numbers": verse_numbers,
             "verses": [s.model_dump() for s in slides], "warnings": warnings}
 
 
@@ -265,11 +268,12 @@ class LookupIn(BaseModel):
     reference: str = Field(..., min_length=1, max_length=200)
     translation_code: str
     combine: bool = False
+    verse_numbers: bool = True
 
 
 @router.post("/lookup", dependencies=[BIBLE_AUTH])
 async def lookup(body: LookupIn):
-    return await lookup_passage(body.reference, body.translation_code, body.combine)
+    return await lookup_passage(body.reference, body.translation_code, body.combine, body.verse_numbers)
 
 
 class SlideIn(BaseModel):
@@ -288,6 +292,7 @@ class PublishIn(BaseModel):
     verses: List[SlideIn] = Field(..., min_length=1, max_length=MAX_SLIDES)
     start_index: int = 0
     combined: bool = False
+    verse_numbers: bool = True
 
 
 @router.post("/publish", dependencies=[BIBLE_AUTH])
@@ -301,7 +306,7 @@ async def publish(body: PublishIn):
     idx = max(0, min(body.start_index, len(body.verses) - 1))
     p = Passage(reference_input=body.reference_input, normalized_reference=body.normalized_reference.strip(),
                 translation_code=body.translation_code, source_type=body.source_type,
-                combined=body.combined and body.source_type == "local_lookup",
+                combined=body.combined and body.source_type == "local_lookup", verse_numbers=body.verse_numbers,
                 verses=[VerseSlide(**v.model_dump()) for v in body.verses], active_slide_index=idx,
                 status="live", updated_at=now_iso())
     await db.bible_passages.update_many({"status": "live"}, {"$set": {"status": "ended"}})
@@ -355,7 +360,7 @@ async def switch_translation(body: SwitchIn):
         raise HTTPException(409, "No scripture is on the display.")
     if p.source_type not in ("local_lookup", "reference_only"):
         raise HTTPException(409, "Manual text cannot be switched to another translation.")
-    result = await lookup_passage(p.normalized_reference, body.translation_code, p.combined)
+    result = await lookup_passage(p.normalized_reference, body.translation_code, p.combined, p.verse_numbers)
     if p.source_type == "reference_only":
         result["verses"] = [VerseSlide(reference_label=result["normalized_reference"], verse_text="").model_dump()]
     st = await display_doc()
@@ -376,6 +381,7 @@ class PreparedIn(BaseModel):
     kind: Literal["scripture", "hymn", "custom"] = "scripture"
     reference_only: bool = False
     combined: bool = False
+    verse_numbers: bool = True
     library_id: Optional[str] = None
 
 

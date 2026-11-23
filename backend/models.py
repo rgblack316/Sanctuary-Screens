@@ -57,6 +57,7 @@ class Passage(BaseDocument):
     translation_code: Optional[str] = None
     source_type: str
     combined: bool = False
+    verse_numbers: bool = True
     verses: List[VerseSlide]
     active_slide_index: int = 0
     status: str = "live"
@@ -72,6 +73,7 @@ class PreparedItem(BaseDocument):
     kind: str = "scripture"
     reference_only: bool = False
     combined: bool = False
+    verse_numbers: bool = True
     library_id: Optional[str] = None
     sort_order: int = 0
     played: bool = False
