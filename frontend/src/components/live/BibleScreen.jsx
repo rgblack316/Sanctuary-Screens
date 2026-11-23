@@ -15,6 +15,14 @@ const SAMPLE = {
   },
 };
 
+const SUP = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+// Verse numbers arrive as superscript digits; draw them as real <sup> so every digit looks the same on any machine.
+function VerseText({ text }) {
+  const parts = text.split(/([⁰¹²³⁴⁵⁶⁷⁸⁹]+)/);
+  if (parts.length === 1) return text;
+  return parts.map((part, i) => (i % 2 ? <sup key={i} className="verse-num">{[...part].map((c) => SUP.indexOf(c)).join("")}</sup> : part));
+}
+
 const baseSize = (n) => (n < 80 ? 8 : n < 160 ? 6.6 : n < 280 ? 5.4 : n < 420 ? 4.6 : n < 600 ? 3.9 : 3.3);
 
 // Shrinks the reference + verse group until it fits the box (handles very long verses on small screens).
@@ -61,7 +69,7 @@ function FitText({ text, reference, scale = 1, refSize, custom }) {
         <span className={`bible-ref text-center ${text ? "mb-[3vmin]" : "bible-ref-solo"}`} data-testid="bible-reference">{reference}</span>
         {text && (
           <p ref={textRef} data-testid="bible-verse-text" className={`bible-text ${custom ? "whitespace-pre-line" : ""}`} style={{ fontSize: `${size}vmin` }}>
-            {text}
+            <VerseText text={text} />
           </p>
         )}
       </div>

@@ -46,11 +46,12 @@ export const itemDetail = (it, defaultCode) => {
   if (it.kind === "custom") return "custom slide";
   if (it.preloaded_text_optional) return "manual text";
   const code = it.translation_code || `default (${defaultCode})`;
-  return it.reference_only ? `reference only · ${code}` : code;
+  if (it.reference_only) return `reference only · ${code}`;
+  return it.combined ? `${code} · one slide` : code;
 };
 
-export async function lookupDraft(reference, translation_code) {
-  const { data } = await bibleApi.post("/bible/lookup", { reference, translation_code });
+export async function lookupDraft(reference, translation_code, combine = false, verse_numbers = true) {
+  const { data } = await bibleApi.post("/bible/lookup", { reference, translation_code, combine, verse_numbers });
   return data;
 }
 
@@ -64,14 +65,14 @@ export function draftFromPrepared(item, defaultCode) {
   if (item.kind === "custom") return customDraft(item.reference, item.preloaded_text_optional || "");
   if (item.preloaded_text_optional?.trim()) return manualDraft(item.reference, item.preloaded_text_optional);
   const code = item.translation_code || defaultCode;
-  return item.reference_only ? referenceOnlyDraft(item.reference, code) : lookupDraft(item.reference, code);
+  return item.reference_only ? referenceOnlyDraft(item.reference, code) : lookupDraft(item.reference, code, !!item.combined, item.verse_numbers !== false);
 }
 
 export function preparedFromDraft(draft, service_date) {
-  const base = { service_date, title_or_note: "", translation_code: draft.translation_code, preloaded_text_optional: "", kind: "scripture", reference_only: false };
+  const base = { service_date, title_or_note: "", translation_code: draft.translation_code, preloaded_text_optional: "", kind: "scripture", reference_only: false, combined: false, verse_numbers: true };
   if (draft.source_type === "custom") return { ...base, kind: draft.hymn ? "hymn" : "custom", translation_code: null, reference: draft.normalized_reference, preloaded_text_optional: draft.verses.map((v) => v.verse_text).filter(Boolean).join("\n---\n") };
   if (draft.source_type === "manual") return { ...base, translation_code: null, reference: draft.normalized_reference, preloaded_text_optional: draft.verses.map((v) => v.verse_text).join("\n\n") };
-  return { ...base, reference: draft.normalized_reference, reference_only: draft.source_type === "reference_only" };
+  return { ...base, reference: draft.normalized_reference, reference_only: draft.source_type === "reference_only", combined: draft.source_type === "local_lookup" && !!draft.combined, verse_numbers: draft.verse_numbers !== false };
 }
 
 export async function publishDraft(draft, start_index = 0) {
@@ -81,6 +82,8 @@ export async function publishDraft(draft, start_index = 0) {
     translation_code: ["local_lookup", "reference_only"].includes(draft.source_type) ? draft.translation_code : null,
     source_type: draft.source_type,
     verses: draft.verses,
+    combined: draft.source_type === "local_lookup" && !!draft.combined,
+    verse_numbers: draft.verse_numbers !== false,
     start_index,
   });
   return data;
@@ -88,7 +91,7 @@ export async function publishDraft(draft, start_index = 0) {
 
 // Name a draft is saved under in the library (the server refuses two slides with the same name).
 export function libraryNameFor(draft) {
-  const suffix = { reference_only: " (reference only)", local_lookup: ` (${draft.translation_code})`, manual: " (manual)" }[draft.source_type] || "";
+  const suffix = { reference_only: " (reference only)", local_lookup: ` (${draft.translation_code}${draft.combined ? (draft.verse_numbers === false ? ", one slide, no numbers" : ", one slide") : ""})`, manual: " (manual)" }[draft.source_type] || "";
   return `${draft.normalized_reference}${suffix}`;
 }
 

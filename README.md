@@ -90,7 +90,7 @@ Bible display tip: in `/settings-admin` → Bible → *Church name & logo*, tick
 
 ## Reference formats
 
-`Romans 6:23`, `Rom 6:23-25`, `Psalm 23`, `John 3:16-4:2` (cross-chapter), `John 3-4`, `1 Jn 1:9,10`, `Romans 6:23; 8:1`. Every verse becomes its own slide (max 300 per passage). If a lookup fails, use the Manual text tab – blank lines separate slides. Tick **Reference only** on the lookup tab to show just the reference (e.g. `John 3:16-18`) on a single slide, without the verse text.
+`Romans 6:23`, `Rom 6:23-25`, `Psalm 23`, `John 3:16-4:2` (cross-chapter), `John 3-4`, `1 Jn 1:9,10`, `Romans 6:23; 8:1`. Every verse becomes its own slide (max 300 per passage). If a lookup fails, use the Manual text tab – blank lines separate slides. Tick **Reference only** on the lookup tab to show just the reference (e.g. `John 3:16-18`) on a single slide, without the verse text. Tick **Put the whole reference on one slide** to get one slide with the full passage (the verses run together under the reference, e.g. `John 3:16-18`, each with a small verse number in the accent color; untick **Show verse numbers** to leave them out) instead of one slide per verse; a passage over 5,000 characters is refused as too long. The choice is remembered when you save to the prepared list or library (library names get a ", one slide" suffix) and is kept if you switch translation while it is live.
 
 ## Custom slides, hymns & slide library
 
